@@ -1115,6 +1115,27 @@
       padding: 1.25rem;
       margin: 1.25rem 0;
     }
+
+    .offline-first-banner {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(21, 30, 51, 0.92));
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      border-radius: 16px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .offline-first-banner .pwa-card-icon {
+      color: var(--status-vigente);
+      background-color: rgba(16, 185, 129, 0.15);
+    }
+
+    .offline-first-banner .btn-pwa-action {
+      margin-top: 0.75rem;
+      border-color: rgba(16, 185, 129, 0.5);
+    }
     
     .pwa-card-header {
       display: flex;
@@ -1324,7 +1345,7 @@
                 <p class="splash-subtitle" style="margin-bottom: 2rem;">“Un ciudadano informado conoce y defiende sus derechos”</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; max-width: 280px; margin: 0 auto;">
-                  <button class="btn-action" onclick="goToScreen('screen-home')" style="width: 100%;">
+                  <button class="btn-action" onclick="enterApp()" style="width: 100%;">
                     Aceptar y Continuar <i data-lucide="arrow-right" style="width: 16px; height: 16px; margin-left: 6px;"></i>
                   </button>
                   
@@ -1379,6 +1400,17 @@
                   <div class="shortcut-icon"><i data-lucide="truck" style="width: 16px; height: 16px;"></i></div>
                   <h5>Retención</h5>
                   <p>Cuándo se lleva la moto la grúa</p>
+                </div>
+              </div>
+
+              <div class="offline-first-banner" id="offline-first-banner" style="display: none;">
+                <div class="pwa-card-icon"><i data-lucide="wifi-off" style="width: 18px; height: 18px;"></i></div>
+                <div class="pwa-card-text">
+                  <h5>Prepárate para usar CascoLegal sin internet</h5>
+                  <p>Descarga ahora los documentos oficiales. Quedarán guardados en este dispositivo para consultarlos sin conexión.</p>
+                  <button class="btn-pwa-action" onclick="startOfflineCacheDownload()">
+                    <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar PDF offline
+                  </button>
                 </div>
               </div>
               
@@ -1853,6 +1885,19 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       return String(value).trim().toLowerCase().replace(/\\s+/g, ' ').slice(0, 300);
     }
 
+    function enterApp() {
+      goToScreen('screen-home');
+      if (!localStorage.getItem('cascolegal-offline-prompt-seen')) {
+        localStorage.setItem('cascolegal-offline-prompt-seen', '1');
+        const banner = document.getElementById('offline-first-banner');
+        if (banner) {
+          banner.style.display = 'flex';
+          setTimeout(() => banner.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+          lucide.createIcons();
+        }
+      }
+    }
+
     function saveChatState() {
       localStorage.setItem('cascolegal-chat-history', JSON.stringify(chatHistory.slice(-12)));
       localStorage.setItem('cascolegal-chat-cache', JSON.stringify(chatAnswerCache));
@@ -2193,6 +2238,8 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
 
         statusLbl.textContent = '¡Descarga offline completada con éxito!';
         statusLbl.style.color = 'var(--status-vigente)';
+        const firstBanner = document.getElementById('offline-first-banner');
+        if (firstBanner) firstBanner.style.display = 'none';
         dlBtn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Guardado Offline';
         lucide.createIcons(); // refresh icons
       } catch (err) {
