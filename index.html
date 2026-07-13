@@ -1310,63 +1310,9 @@
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header>
-    <div class="brand">
-      <div class="brand-logo">CL</div>
-      <div class="brand-info">
-        <h1>CascoLegal</h1>
-        <p>Sistema Inteligente de Información Legal para Motociclistas</p>
-      </div>
-    </div>
-    
-    <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchMainTab('simulator')">
-        <i data-lucide="smartphone"></i> Simulador MVP
-      </button>
-      <button class="tab-btn" onclick="switchMainTab('admin')">
-        <i data-lucide="settings"></i> Consola Admin Web
-      </button>
-      <button class="tab-btn" onclick="switchMainTab('architecture')">
-        <i data-lucide="cpu"></i> Arquitectura y RAG
-      </button>
-    </div>
-    
-    <div style="font-size: 0.8rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
-      <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--status-vigente);"></span>
-      Entorno de Desarrollo MVP Activo
-    </div>
-  </header>
-
-  <!-- CONTAINER -->
-  <div class="container">
-    
-    <!-- MAIN WORKSPACE -->
-    <div class="workspace">
-      
-      <!-- LEFT SIDE: MOBILE ANDROID SIMULATOR (STATIC FOR ALL TABS) -->
-      <div class="phone-wrapper">
-        <h3 style="font-family: var(--font-title); font-size: 1rem; font-weight: 600; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
-          <i data-lucide="smartphone"></i> Simulación de Dispositivo Android
-        </h3>
-        
-        <div class="phone-shell">
-          <!-- Notch -->
-          <div class="phone-notch">
-            <div class="camera-lens"></div>
-          </div>
-          
-          <!-- Status Bar -->
-          <div class="phone-status-bar">
-            <span id="phone-time">23:36</span>
-            <div class="status-icons">
-              <i data-lucide="wifi" style="width: 12px; height: 12px;"></i>
-              <i data-lucide="battery" style="width: 12px; height: 12px;"></i>
-            </div>
-          </div>
-          
-          <!-- Screen Contents -->
-          <div class="phone-screen" id="phone-screen-container">
+  <div class="phone-shell">
+    <!-- Screen Contents -->
+    <div class="phone-screen" id="phone-screen-container">
             
             <!-- SCREEN: SPLASH -->
             <div class="screen active" id="screen-splash" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-bottom: 2rem;">
@@ -1702,237 +1648,6 @@
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- RIGHT SIDE: TAB CONTROLLED AREA -->
-      <div class="main-workspace-content">
-        
-        <!-- PANEL: SIMULADOR MVP PLAYGROUND -->
-        <div class="tab-panel active" id="panel-simulator">
-          <div class="playground-header">
-            <h2>Simulador del Sistema RAG & Consola de Pruebas</h2>
-            <p>Ejecuta consultas semánticas locales utilizando los datos reales sembrados de las leyes panameñas.</p>
-          </div>
-          
-          <div class="rag-tester">
-            <h3 style="font-family: var(--font-title); font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-              <i data-lucide="terminal" style="color: var(--color-primary);"></i> Probar Consultas RAG
-            </h3>
-            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.25rem;">
-              Escribe cualquier pregunta de tránsito (ej: "chaleco reflectivo", "placa delivery", "causas de retencion de vehiculo", "licencia tipo b"). El RAG procesará la búsqueda híbrida y responderá con citas y enlaces.
-            </p>
-            
-            <div class="tester-inputs">
-              <input type="text" class="tester-input" id="rag-playground-query" placeholder="Escribe tu consulta aquí..." value="¿Es obligatorio el chaleco reflectivo de noche?">
-              <button class="btn-run-rag" onclick="runRAGPlaygroundQuery()">
-                Ejecutar RAG <i data-lucide="play" style="width: 14px; height: 14px;"></i>
-              </button>
-            </div>
-          </div>
-          
-          <!-- RAG Pipeline Trace Preview -->
-          <h3 style="font-family: var(--font-title); font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
-            <i data-lucide="eye" style="color: var(--color-secondary);"></i> Trazabilidad del Pipeline RAG (Pasos Internos)
-          </h3>
-          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
-            Aquí puedes ver exactamente cómo el sistema cascolegal Panamá procesa la consulta y recupera las fuentes oficiales.
-          </p>
-          
-          <div class="rag-steps-grid">
-            <div class="step-box">
-              <div class="step-box-title">
-                <i data-lucide="database"></i> Paso 1: Recuperación de Documentos (Búsqueda Híbrida)
-              </div>
-              <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--color-text-muted);">
-                Resultado de la consulta a la base de datos `articles` mediante filtrado y coincidencia de palabras clave:
-              </p>
-              <div class="step-content" id="rag-step1-output">
-                // Ejecuta la consulta para ver el trace
-              </div>
-            </div>
-            
-            <div class="step-box">
-              <div class="step-box-title">
-                <i data-lucide="code-2"></i> Paso 2: Prompt Completo del Sistema & LLM Context
-              </div>
-              <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--color-text-muted);">
-                El contexto estructurado final inyectado al modelo de lenguaje (con directrices anti-alucinaciones):
-              </p>
-              <div class="step-content" id="rag-step2-output">
-                // Ejecuta la consulta para ver el trace
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- PANEL: ADMIN WEB CONSOLE -->
-        <div class="tab-panel" id="panel-admin">
-          <div class="playground-header">
-            <h2>Consola Web Administrativa cascolegal</h2>
-            <p>Administración y curación humana de normativas de tránsito, auditoría de cambios y gestión de fuentes oficiales.</p>
-          </div>
-          
-          <div class="admin-grid">
-            <div class="admin-stat-card">
-              <div class="stat-header">Fuentes Monitoreadas <i data-lucide="globe"></i></div>
-              <div class="stat-val">3 Fuentes</div>
-              <p style="font-size: 0.75rem; color: var(--status-vigente); margin-top: 0.25rem;">Todas activas e integradas</p>
-            </div>
-            <div class="admin-stat-card">
-              <div class="stat-header">Documentos Indexados <i data-lucide="file-check-2"></i></div>
-              <div class="stat-val">3 Documentos</div>
-              <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">5 Artículos en total</p>
-            </div>
-            <div class="admin-stat-card">
-              <div class="stat-header">Pendientes de Aprobación <i data-lucide="clock"></i></div>
-              <div class="stat-val" id="admin-pending-count" style="color: var(--color-secondary);">1 Ley</div>
-              <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Ingestado por scraper</p>
-            </div>
-          </div>
-          
-          <div class="admin-table-container">
-            <div class="admin-table-title">
-              Cola de Ingestión: Documentos Pendientes de Aprobación Humana
-              <span style="font-size: 0.75rem; font-weight: normal; color: var(--color-text-muted);">
-                Detector de reformas activo
-              </span>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Documento / Origen</th>
-                  <th>Fecha de Publicación</th>
-                  <th>Estado del Scraper</th>
-                  <th>Detección de Reformas</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody id="admin-pending-tbody">
-                <tr id="pending-row-1">
-                  <td>
-                    <strong>Propuesta de Ley N° 345 (ATTT)</strong><br>
-                    <span style="font-size: 0.75rem; color: var(--color-text-muted);">https://www.transito.gob.pa/propuesta-345</span>
-                  </td>
-                  <td>12 de Julio, 2026</td>
-                  <td><span class="law-badge" style="background-color: rgba(245,158,11,0.15); color: var(--color-secondary);">Pendiente</span></td>
-                  <td><span style="color: var(--status-derogado); font-weight: 500;">"Propone modificar Art. 104"</span></td>
-                  <td>
-                    <button class="btn-success" onclick="approveDocument('pending-row-1', 'Propuesta de Ley N° 345')">Aprobar y Publicar</button>
-                    <button class="btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.75rem;" onclick="dismissRow('pending-row-1')">Rechazar</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Audit Log Section -->
-          <div class="admin-table-container" style="margin-top: 2rem;">
-            <div class="admin-table-title">
-              Historial de Auditoría de Cambios Legales
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Acción</th>
-                  <th>Tabla Afectada</th>
-                  <th>Justificación</th>
-                  <th>Fecha</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>admin@cascolegal.pa</td>
-                  <td><span style="color: var(--status-vigente);">Aprobación de Documento</span></td>
-                  <td>legal_documents</td>
-                  <td>"Sembrado inicial del Decreto Ejecutivo 19 de 2022 para delivery"</td>
-                  <td>Hace 2 horas</td>
-                </tr>
-                <tr>
-                  <td>admin@cascolegal.pa</td>
-                  <td><span style="color: var(--status-vigente);">Establecer Relación</span></td>
-                  <td>normative_relations</td>
-                  <td>"Vinculación del Art. 40-A como reforma adicional al Reglamento"</td>
-                  <td>Hace 2 horas</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-        
-        <!-- PANEL: ARCHITECTURE DETAILS -->
-        <div class="tab-panel" id="panel-architecture">
-          <div class="playground-header">
-            <h2>Modelo del Sistema de Ingestión y RAG</h2>
-            <p>Detalles técnicos de la orquestación RAG y el modelo de datos de cascolegal Panamá.</p>
-          </div>
-          
-          <div class="doc-section">
-            <h3>1. Estrategia de Segmentación de Texto (Chunking)</h3>
-            <p>
-              En lugar de dividir los documentos legales en chunks de tamaño fijo (ej: 500 tokens), el ingestor cascolegal divide el texto de forma **atómica por artículos y subartículos**. Esto se debe a que las leyes tienen un significado lógico e independiente en cada artículo. Agrupar la información de esta manera previene que la búsqueda de RAG devuelva fragmentos de textos incompletos o mezcle el contexto de artículos distintos.
-            </p>
-          </div>
-          
-          <div class="doc-section">
-            <h3>2. Búsqueda Híbrida (Vectores + FTS)</h3>
-            <p>
-              El motor de búsqueda de cascolegal en Supabase PostgreSQL combina:
-            </p>
-            <div class="doc-code">
--- Ejemplo de búsqueda híbrida en Supabase PostgreSQL
-CREATE OR REPLACE FUNCTION match_articles (
-  query_embedding vector(1536),
-  query_text text,
-  match_threshold float,
-  match_count int
-)
-RETURNS TABLE (
-  id uuid,
-  document_title text,
-  article_number text,
-  content text,
-  similarity float
-)
-LANGUAGE plpgsql AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    a.id,
-    d.title as document_title,
-    a.article_number,
-    a.content,
-    1 - (a.embedding <=> query_embedding) as similarity
-  FROM articles a
-  JOIN legal_documents d ON a.document_id = d.id
-  WHERE 
-    d.status_vigency IN ('vigente', 'parcialmente_vigente', 'modificado')
-    AND d.review_status = 'approved'
-    AND (
-      (1 - (a.embedding <=> query_embedding) > match_threshold)
-      OR to_tsvector('spanish', a.content) @@ to_tsquery('spanish', query_text)
-    )
-  ORDER BY similarity DESC
-  LIMIT match_count;
-END;
-$$;</div>
-          </div>
-          
-          <div class="doc-section">
-            <h3>3. Políticas de Seguridad de IA y Evitación de Alucinaciones</h3>
-            <p>
-              El prompt del sistema de cascolegal cuenta con cláusulas estrictas para impedir alucinaciones legales. Si el LLM no encuentra una coincidencia con un puntaje de confianza suficiente, responde de forma estandarizada:
-            </p>
-            <blockquote style="border-left: 4px solid var(--color-primary); padding: 0.5rem 1rem; background-color: rgba(255,255,255,0.02); font-style: italic; font-size: 0.9rem; margin-bottom: 1rem;">
-              "No se encontró una disposición oficial suficiente para confirmar esta afirmación en los términos indicados. Se encontraron las siguientes normas relacionadas..."
-            </blockquote>
-          </div>
-        </div>
-        
-      </div>
-      
-    </div>
-  </div>
 
   <script>
     // JS STATE MANAGEMENT
@@ -2132,16 +1847,17 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     // RUN PLAYGROUND QUERY
     function runRAGPlaygroundQuery() {
       const queryInput = document.getElementById('rag-playground-query');
-      const query = queryInput.value;
+      if (!queryInput) return;
       
+      const query = queryInput.value;
       const ragResult = runLocalRAG(query);
       
       // Escribir outputs en paneles de trazabilidad
       const step1Div = document.getElementById('rag-step1-output');
       const step2Div = document.getElementById('rag-step2-output');
       
-      step1Div.innerHTML = JSON.stringify(ragResult.matches, null, 2);
-      step2Div.innerHTML = ragResult.prompt;
+      if (step1Div) step1Div.innerHTML = JSON.stringify(ragResult.matches, null, 2);
+      if (step2Div) step2Div.innerHTML = ragResult.prompt;
       
       // Si estamos en la pestaña del chat en el celular, inyectar respuesta ahí también
       if (currentScreen === 'screen-chat') {
