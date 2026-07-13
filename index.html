@@ -1455,6 +1455,171 @@
       font-weight: 700;
       color: #fff;
     }
+
+    .install-choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .platform-install-btn {
+      position: relative;
+      width: 100%;
+      min-height: 58px;
+      border-radius: 15px;
+      border: 1px solid transparent;
+      padding: 0.7rem 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: #fff;
+      font-family: var(--font-title);
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .platform-install-btn:active {
+      transform: scale(0.98);
+    }
+
+    .platform-install-btn.android {
+      background: linear-gradient(135deg, #15803d, #22c55e);
+      border-color: rgba(134, 239, 172, 0.5);
+      box-shadow: 0 8px 22px rgba(34, 197, 94, 0.22);
+    }
+
+    .platform-install-btn.ios {
+      background: linear-gradient(135deg, #334155, #111827);
+      border-color: rgba(203, 213, 225, 0.35);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25);
+    }
+
+    .platform-install-btn.recommended {
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.18), 0 10px 26px rgba(0, 0, 0, 0.3);
+    }
+
+    .platform-install-btn.recommended::after {
+      content: 'Recomendado';
+      position: absolute;
+      right: 10px;
+      top: -8px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #fbbf24;
+      color: #422006;
+      font-size: 0.52rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .platform-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .platform-install-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      min-width: 0;
+    }
+
+    .platform-install-copy small {
+      color: rgba(255, 255, 255, 0.72);
+      font-family: var(--font-body);
+      font-size: 0.62rem;
+      font-weight: 400;
+    }
+
+    .ios-guide-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10020;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      background: rgba(3, 7, 18, 0.88);
+      backdrop-filter: blur(8px);
+    }
+
+    .ios-guide-card {
+      width: 100%;
+      max-width: 370px;
+      max-height: 90dvh;
+      overflow-y: auto;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 22px;
+      padding: 1.25rem;
+      background: linear-gradient(165deg, #172033, #090d16 70%);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .ios-guide-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .ios-guide-title .platform-icon {
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .ios-install-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin: 1rem 0;
+    }
+
+    .ios-install-step {
+      display: grid;
+      grid-template-columns: 30px 34px 1fr;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.7rem;
+      border: 1px solid rgba(59, 130, 246, 0.22);
+      border-radius: 13px;
+      background: rgba(30, 41, 59, 0.72);
+    }
+
+    .ios-step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2563eb;
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .ios-install-step strong {
+      display: block;
+      font-size: 0.76rem;
+      margin-bottom: 0.12rem;
+    }
+
+    .ios-install-step p {
+      color: var(--color-text-muted);
+      font-size: 0.64rem;
+      line-height: 1.35;
+    }
   </style>
 </head>
 <body>
@@ -1491,10 +1656,10 @@
             <div class="modal-backdrop" id="offline-onboarding-modal" style="display: none;">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5>Descarga para usar sin internet</h5>
+                  <h5>Instala CascoLegal en tu teléfono</h5>
                 </div>
                 <p id="offline-install-help" style="font-size: 0.75rem; line-height: 1.45; color: var(--color-text-muted); margin-bottom: 1rem;">
-                  Instala CascoLegal y descarga los documentos oficiales de tránsito en este dispositivo. Así podrás consultarlos aunque no tengas conexión.
+                  Elige el tipo de teléfono donde quieres instalar CascoLegal.
                 </p>
                 <div class="download-progress-container" id="offline-modal-progress-box" style="display: none; margin-bottom: 1rem;">
                   <div class="progress-info-row">
@@ -1505,8 +1670,64 @@
                     <div class="progress-bar-fill" id="offline-modal-progress-fill"></div>
                   </div>
                 </div>
-                <button class="btn-action" id="offline-modal-download-btn" onclick="startInstallAndOfflineDownload()" style="width: 100%;">
-                  <i data-lucide="download-cloud" style="width: 14px; height: 14px;"></i> Instalar aplicación y descargar PDFs offline
+                <div class="install-choice-list">
+                  <button class="platform-install-btn android" id="offline-modal-download-btn" onclick="startInstallAndOfflineDownload()">
+                    <span class="platform-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M8 6 6.8 3.9M16 6l1.2-2.1" />
+                        <path d="M6.5 8.2h11v7.3a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V8.2Z" fill="currentColor" stroke="none" />
+                        <circle cx="9.3" cy="11" r=".75" fill="#14532d" stroke="none" />
+                        <circle cx="14.7" cy="11" r=".75" fill="#14532d" stroke="none" />
+                        <path d="M8.8 17.2v3M15.2 17.2v3M4.5 9.5v6M19.5 9.5v6" />
+                      </svg>
+                    </span>
+                    <span class="platform-install-copy">
+                      <span>Instalar en Android</span>
+                      <small>Instalación directa y PDFs offline</small>
+                    </span>
+                  </button>
+
+                  <button class="platform-install-btn ios" id="btn-ios-install-guide" onclick="showIOSInstallGuide()">
+                    <span class="platform-icon" aria-hidden="true"><i data-lucide="apple" style="width: 23px; height: 23px;"></i></span>
+                    <span class="platform-install-copy">
+                      <span>Instalar en iPhone</span>
+                      <small>Guía para instalar usando Safari</small>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="ios-guide-backdrop" id="ios-install-guide" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="ios-guide-heading" onclick="if (event.target === this) hideIOSInstallGuide()">
+              <div class="ios-guide-card">
+                <div class="ios-guide-title">
+                  <span class="platform-icon" aria-hidden="true"><i data-lucide="apple" style="width: 24px; height: 24px;"></i></span>
+                  <div>
+                    <h5 id="ios-guide-heading" style="font-family: var(--font-title); font-size: 1rem;">Instalar en iPhone</h5>
+                    <p style="font-size: 0.66rem; color: var(--color-text-muted); margin-top: 0.15rem;">Apple requiere hacerlo desde Safari.</p>
+                  </div>
+                </div>
+
+                <div class="ios-install-steps">
+                  <div class="ios-install-step">
+                    <span class="ios-step-number">1</span>
+                    <i data-lucide="compass" style="width: 24px; height: 24px; color: #60a5fa;"></i>
+                    <div><strong>Abrir en Safari</strong><p>Si estás en otro navegador, copia el enlace y ábrelo con Safari.</p></div>
+                  </div>
+                  <div class="ios-install-step">
+                    <span class="ios-step-number">2</span>
+                    <i data-lucide="share" style="width: 24px; height: 24px; color: #60a5fa;"></i>
+                    <div><strong>Pulsar Compartir</strong><p>Toca el icono de compartir en la barra de Safari.</p></div>
+                  </div>
+                  <div class="ios-install-step">
+                    <span class="ios-step-number">3</span>
+                    <i data-lucide="square-plus" style="width: 24px; height: 24px; color: #60a5fa;"></i>
+                    <div><strong>Añadir a pantalla de inicio</strong><p>Selecciona esa opción y confirma pulsando “Añadir”.</p></div>
+                  </div>
+                </div>
+
+                <button class="btn-action" onclick="hideIOSInstallGuide()" style="width: 100%;">
+                  Entendido <i data-lucide="check" style="width: 16px; height: 16px;"></i>
                 </button>
               </div>
             </div>
@@ -1966,11 +2187,34 @@
 
     function updateInstallHelpForDevice() {
       const help = document.getElementById('offline-install-help');
-      const button = document.getElementById('offline-modal-download-btn');
-      if (!help || !button || !isIOSDevice()) return;
-      help.textContent = 'En iPhone o iPad, abre CascoLegal en Safari, pulsa Compartir y elige “Añadir a pantalla de inicio”. Luego abre la aplicación desde el nuevo icono para guardar los PDFs offline.';
-      button.innerHTML = '<i data-lucide="share" style="width: 14px; height: 14px;"></i> Ver instrucciones y guardar PDFs offline';
+      const androidButton = document.getElementById('offline-modal-download-btn');
+      const iosButton = document.getElementById('btn-ios-install-guide');
+      if (!help || !androidButton || !iosButton) return;
+
+      const isIOS = isIOSDevice();
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      androidButton.classList.toggle('recommended', isAndroid);
+      iosButton.classList.toggle('recommended', isIOS);
+      help.textContent = isIOS
+        ? 'Tu dispositivo es iPhone o iPad. Usa la guía de Safari para instalar CascoLegal.'
+        : isAndroid
+          ? 'Tu dispositivo es Android. Pulsa instalar y Chrome continuará automáticamente.'
+          : 'Elige el tipo de teléfono donde quieres instalar CascoLegal.';
       lucide.createIcons();
+    }
+
+    function showIOSInstallGuide() {
+      const guide = document.getElementById('ios-install-guide');
+      if (!guide) return;
+      guide.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+
+    function hideIOSInstallGuide() {
+      const guide = document.getElementById('ios-install-guide');
+      if (guide) guide.style.display = 'none';
+      document.body.style.overflow = '';
     }
 
     async function refreshOfflinePdfCard() {
