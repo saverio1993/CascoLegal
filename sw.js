@@ -1,22 +1,28 @@
-const CACHE_NAME = 'cascolegal-v9';
+const CACHE_NAME = 'cascolegal-v10';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './assets/bikers-society-logo.jpg',
   './assets/icon-192.png',
-  './assets/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap'
+  './assets/icon-512.png'
 ];
 
 // Instalación: Guardar recursos estáticos básicos
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    console.log('[Service Worker] Caching static assets');
+    // Un recurso secundario no debe impedir que el service worker se instale.
+    await Promise.all(STATIC_ASSETS.map(async (asset) => {
+      try {
+        const response = await fetch(asset, { cache: 'no-cache' });
+        if (response.ok) await cache.put(asset, response);
+      } catch (error) {
+        console.warn('[Service Worker] No se pudo precargar:', asset, error);
+      }
+    }));
+  })());
   self.skipWaiting();
 });
 

@@ -2317,7 +2317,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     // PWA REGISTER SERVICE WORKER
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
           .then(reg => {
             console.log('Service Worker registrado con éxito:', reg.scope);
             reg.update();
@@ -2389,7 +2389,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           button.disabled = false;
           button.style.opacity = '1';
         }
-        alert('Chrome todavía no habilitó la ventana de instalación. Cierra y vuelve a abrir CascoLegal en Chrome, espera unos segundos y pulsa nuevamente “Instalar aplicación y descargar PDFs offline”.');
+        alert('Chrome no mostró la ventana automática de instalación. En esta misma página, abre el menú ⋮ de Chrome y elige “Instalar CascoLegal” o “Agregar a pantalla de inicio”. Después vuelve a pulsar este botón para descargar los PDFs offline.');
         return;
       }
 
