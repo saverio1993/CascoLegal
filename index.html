@@ -661,6 +661,28 @@
       background: #fff;
     }
 
+    .pdf-viewer-object {
+      display: block;
+      width: 100%;
+      height: 54vh;
+      min-height: 320px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .society-logo {
+      display: block;
+      width: 78px;
+      height: 78px;
+      object-fit: contain;
+      margin: 0 auto 0.55rem;
+      border-radius: 50%;
+      background: #000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
     .pdf-highlight-box {
       margin: 0.75rem 0;
       padding: 0.75rem;
@@ -1500,6 +1522,7 @@
               
               <!-- Credits -->
               <div style="text-align: center; font-size: 0.65rem; color: var(--color-text-muted); margin-top: 2rem; margin-bottom: 1.5rem; line-height: 1.4;">
+                <img class="society-logo" src="/assets/bikers-society-logo.jpg" alt="Logo de Panamá Biker Society">
                 Desarrollado y creado por el Grupo del Club de<br><strong style="color: var(--color-secondary);">Panamá Biker Society</strong>
               </div>
             </div>
@@ -1542,7 +1565,7 @@
             <!-- SCREEN: PDF VIEWER -->
             <div class="screen" id="screen-pdf-viewer">
               <div class="screen-header">
-                <button class="btn-back" onclick="goToScreen('screen-chat')">
+                <button class="btn-back" onclick="closePdfViewer()">
                   <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
                 </button>
                 <h4 id="pdf-viewer-heading">Gaceta Oficial</h4>
@@ -1552,7 +1575,9 @@
                 <p id="pdf-viewer-highlight" style="font-size: 0.7rem; line-height: 1.45; margin-top: 0.35rem;"></p>
               </div>
               <p id="pdf-viewer-source-label" style="font-size: 0.65rem; color: var(--status-vigente); margin-bottom: 0.5rem;">Buscando documento guardado en este dispositivo...</p>
-              <iframe class="pdf-viewer-frame" id="pdf-viewer-frame" title="Documento PDF oficial"></iframe>
+              <object class="pdf-viewer-object" id="pdf-viewer-object" type="application/pdf" aria-label="Documento PDF oficial">
+                <iframe class="pdf-viewer-frame" id="pdf-viewer-frame" title="Documento PDF oficial"></iframe>
+              </object>
               <a class="citation-link" id="pdf-viewer-external-link" target="_blank" rel="noopener noreferrer" style="margin-top: 0.6rem;">
                 <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> Abrir PDF en otra pestaña
               </a>
@@ -1917,6 +1942,7 @@
       }
 
       document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
+      document.getElementById('pdf-viewer-object').setAttribute('data', pdfUrl);
       document.getElementById('pdf-viewer-frame').setAttribute('src', pdfUrl);
       document.getElementById('pdf-viewer-external-link').setAttribute('href', pdfUrl);
     }
