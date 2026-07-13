@@ -1265,50 +1265,27 @@
             <!-- SCREEN: SPLASH -->
             <div class="screen active" id="screen-splash" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-bottom: 2rem;">
               <div></div>
-              <div style="text-align: center;">
-                <div class="splash-logo">CL</div>
+              <div style="text-align: center; padding: 0 1.5rem;">
+                <div class="splash-logo" style="font-size: 4rem; background: none; box-shadow: none; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; height: auto; width: auto;">🇵🇦</div>
                 <h2 class="splash-title">CascoLegal</h2>
-                <p class="splash-subtitle">“Un ciudadano informado conoce y defiende sus derechos”</p>
-                <div style="margin-top: 2rem; transform: scale(0.8); display: inline-block;">
-                  <button class="btn-action" onclick="goToScreen('screen-onboarding')">
-                    Ingresar <i data-lucide="arrow-right"></i>
+                <p class="splash-subtitle" style="margin-bottom: 2rem;">“Un ciudadano informado conoce y defiende sus derechos”</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; width: 100%; max-width: 280px; margin: 0 auto;">
+                  <button class="btn-action" onclick="goToScreen('screen-home')" style="width: 100%;">
+                    Aceptar y Continuar <i data-lucide="arrow-right" style="width: 16px; height: 16px; margin-left: 6px;"></i>
                   </button>
+                  
+                  <button class="btn-action pwa-install-btn" id="splash-btn-install" style="display: none; width: 100%;" onclick="triggerPWAInstall()">
+                    <i data-lucide="smartphone" style="width: 16px; height: 16px; margin-right: 6px;"></i> Instalar en Celular
+                  </button>
+
+                  <div id="splash-pwa-installed-lbl" style="display: none; font-size: 0.75rem; color: var(--status-vigente); font-weight: 600; margin-top: 0.5rem;">
+                    <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> App instalada en el escritorio
+                  </div>
                 </div>
               </div>
               <div style="text-align: center; font-size: 0.65rem; color: var(--color-text-muted); padding: 0 1rem; line-height: 1.3;">
                 Desarrollado y creado por el Grupo del Club de<br><strong>Panamá Bike Society</strong>
-              </div>
-            </div>
-            
-            <!-- SCREEN: ONBOARDING -->
-            <div class="screen" id="screen-onboarding">
-              <div class="onboard-content">
-                <h3 style="font-family: var(--font-title); font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Bienvenido a CascoLegal</h3>
-                <p style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4;">
-                  La primera plataforma de información y consulta legal en Panamá diseñada específicamente para motociclistas.
-                </p>
-                
-                <div class="onboard-card">
-                  <h3><i data-lucide="shield-check"></i> Regla de Hierro Informativa</h3>
-                  <p>
-                    Toda la información expuesta por nuestro asistente virtual o buscador proviene estrictamente de gacetas oficiales y resoluciones vigentes de la República de Panamá. No inventamos leyes ni regulaciones.
-                  </p>
-                </div>
-                
-                <div class="onboard-card" style="margin-top: 1rem;">
-                  <h3><i data-lucide="alert-triangle"></i> Descargo de Responsabilidad</h3>
-                  <p>
-                    Esta aplicación funciona únicamente como una herramienta informativa de consulta. No emite asesoramiento jurídico formal ni sustituye a un profesional calificado.
-                  </p>
-                </div>
-              </div>
-              
-              <button class="btn-action" onclick="goToScreen('screen-home')">
-                Aceptar y Continuar
-              </button>
-              
-              <div style="text-align: center; font-size: 0.6rem; color: var(--color-text-muted); margin-top: 1rem; margin-bottom: 1rem; line-height: 1.3;">
-                Creado por el Grupo del Club de <strong>Panamá Bike Society</strong>
               </div>
             </div>
             
@@ -1318,10 +1295,6 @@
                 <div class="user-greeting">
                   <h4>Hola, Conductor</h4>
                   <p>Panamá • Consulta Oficial</p>
-                </div>
-                <div style="position: relative; background-color: var(--phone-card-bg); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
-                  <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
-                  <span class="alert-badge"></span>
                 </div>
               </div>
               
@@ -1613,6 +1586,12 @@
       
       // Ejecutar consulta RAG inicial para poblar los campos de trace
       runRAGPlaygroundQuery();
+
+      // Verificar si ya se ejecuta como PWA instalada
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        const installedLbl = document.getElementById('splash-pwa-installed-lbl');
+        if (installedLbl) installedLbl.style.display = 'block';
+      }
     });
     
     function updateTime() {
@@ -1995,9 +1974,9 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       e.preventDefault();
       deferredPrompt = e;
       const installBtn = document.getElementById('btn-install-app');
-      if (installBtn) {
-        installBtn.style.display = 'flex';
-      }
+      if (installBtn) installBtn.style.display = 'flex';
+      const splashBtn = document.getElementById('splash-btn-install');
+      if (splashBtn) splashBtn.style.display = 'flex';
     });
 
     function triggerPWAInstall() {
@@ -2006,10 +1985,14 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
           console.log('Usuario aceptó instalar la PWA');
+          const splashLbl = document.getElementById('splash-pwa-installed-lbl');
+          if (splashLbl) splashLbl.style.display = 'block';
         }
         deferredPrompt = null;
         const installBtn = document.getElementById('btn-install-app');
         if (installBtn) installBtn.style.display = 'none';
+        const splashBtn = document.getElementById('splash-btn-install');
+        if (splashBtn) splashBtn.style.display = 'none';
       });
     }
 
@@ -2032,7 +2015,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       dlBtn.style.opacity = '0.5';
 
       try {
-        const cache = await caches.open('cascolegal-v3');
+        const cache = await caches.open('cascolegal-v4');
         let totalFiles = pdfUrls.length;
         let completedFiles = 0;
 
