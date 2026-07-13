@@ -1784,6 +1784,7 @@
       // Cargar lista de biblioteca inicial
       renderLibraryList();
       renderLatestLaws();
+      refreshOfflinePdfCard();
       
       // Verificar si ya se ejecuta como PWA instalada
       if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
@@ -1915,6 +1916,42 @@
       '19': '/pdfs/Decreto_Ejecutivo_19_2022.pdf',
       '973': '/pdfs/Resolucion_OAL_973_2013.pdf'
     };
+    const OFFLINE_PDF_CACHE_NAME = 'cascolegal-v6';
+    const LEGACY_OFFLINE_PDF_URLS = [
+      'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_640_2006.pdf',
+      'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_19_2022.pdf',
+      'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
+    ];
+
+    async function areOfflinePdfsReady() {
+      const localUrls = Object.values(OFFLINE_PDF_BY_DOCUMENT);
+      const cache = await caches.open(OFFLINE_PDF_CACHE_NAME);
+      for (let i = 0; i < localUrls.length; i++) {
+        const localUrl = new URL(localUrls[i], location.origin).href;
+        let cachedPdf = await cache.match(localUrl);
+        if (!cachedPdf && LEGACY_OFFLINE_PDF_URLS[i]) {
+          const legacyPdf = await cache.match(LEGACY_OFFLINE_PDF_URLS[i]);
+          if (legacyPdf) {
+            await cache.put(localUrl, legacyPdf.clone());
+            cachedPdf = legacyPdf;
+          }
+        }
+        if (!cachedPdf) return false;
+      }
+      return true;
+    }
+
+    async function refreshOfflinePdfCard() {
+      try {
+        const ready = await areOfflinePdfsReady();
+        const pwaCard = document.getElementById('pwa-card');
+        const firstBanner = document.getElementById('offline-first-banner');
+        if (pwaCard) pwaCard.style.display = ready ? 'none' : 'block';
+        if (firstBanner) firstBanner.style.display = ready ? 'none' : 'none';
+      } catch (error) {
+        console.warn('No se pudo verificar el almacenamiento offline:', error);
+      }
+    }
 
     // RENDER BIBLIOTECA LIST
     function renderLibraryList() {
@@ -2016,7 +2053,9 @@
       document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
       document.getElementById('pdf-viewer-object').setAttribute('data', pdfUrl);
       document.getElementById('pdf-viewer-frame').setAttribute('src', pdfUrl);
-      document.getElementById('pdf-viewer-external-link').setAttribute('href', pdfUrl);
+      const externalLink = document.getElementById('pdf-viewer-external-link');
+      externalLink.setAttribute('href', pdfUrl);
+      externalLink.style.display = 'none';
     }
 
     function closePdfViewer() {
@@ -2336,6 +2375,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       document.querySelectorAll('.pwa-install-btn').forEach(button => {
         button.style.display = 'none';
       });
+      if (typeof startOfflineCacheDownload === 'function') startOfflineCacheDownload();
     });
 
     // NATIVE VOICE RECOGNITION (Web Speech API)
@@ -2437,7 +2477,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       downloadBtns.forEach(element => { element.disabled = true; element.style.opacity = '0.5'; });
 
       try {
-        const cache = await caches.open('cascolegal-v6');
+        const cache = await caches.open(OFFLINE_PDF_CACHE_NAME);
         let totalFiles = pdfUrls.length;
         let completedFiles = 0;
 
@@ -2462,12 +2502,15 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         statusLbls.forEach(element => { element.textContent = '¡Descarga offline completada con éxito!'; element.style.color = 'var(--status-vigente)'; });
         const firstBanner = document.getElementById('offline-first-banner');
         if (firstBanner) firstBanner.style.display = 'none';
+        const pwaCard = document.getElementById('pwa-card');
+        if (pwaCard) pwaCard.style.display = 'none';
         downloadBtns.forEach(element => element.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Guardado Offline');
         localStorage.setItem('cascolegal-onboarding-complete', '1');
         const modal = document.getElementById('offline-onboarding-modal');
         if (modal) modal.style.display = 'none';
         goToScreen('screen-home');
         lucide.createIcons(); // refresh icons
+        refreshOfflinePdfCard();
       } catch (err) {
         console.error(err);
         statusLbls.forEach(element => { element.textContent = 'Error al descargar los PDFs. Puedes omitir y volver a intentarlo luego.'; element.style.color = 'var(--status-derogado)'; });
