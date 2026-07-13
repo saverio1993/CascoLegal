@@ -2876,9 +2876,10 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       container.appendChild(loadingMsgDiv);
       container.scrollTop = container.scrollHeight;
       
-      // Consultar MiniMax mediante la función segura del servidor.
-      let aiResponse = await callGeminiAI(userQuery, ragResult);
-      let answerText = aiResponse || chatAnswerCache[chatCacheKey(userQuery)];
+      // Consultar MiniMax y las actualizaciones oficiales mediante la función segura del servidor.
+      let aiResponse = await callLegalAI(userQuery, ragResult);
+      let answerText = aiResponse?.text || chatAnswerCache[chatCacheKey(userQuery)];
+      const legispanSources = Array.isArray(aiResponse?.sources?.legispan) ? aiResponse.sources.legispan : [];
 
       // Si no hay respuesta remota ni una respuesta guardada, usar la base legal local.
       if (!answerText) {
@@ -2904,6 +2905,21 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
             </a>
           </div>
         `).join('')}
+
+        ${legispanSources.map(source => {
+          const sourceUrl = safeLegispanUrl(source.sourceUrl);
+          return `
+            <div class="source-citation-card" style="border-left-color: #38bdf8;">
+              <div class="citation-title">
+                <span>Actualización Legispan: ${escapeHTML(source.document || 'Norma')}</span>
+                <span class="law-badge badge-legispan" style="font-size: 0.55rem; padding: 0 4px;">Nueva</span>
+              </div>
+              <p style="font-size: 0.65rem; color: #cbd5e1; margin-bottom: 4px;">${escapeHTML(source.title || '')}</p>
+              <small style="display:block; margin-bottom: 5px; color: var(--color-text-muted);">${escapeHTML(source.gazette || 'Gaceta Oficial')}</small>
+              ${sourceUrl !== '#' ? `<a href="${escapeHTML(sourceUrl)}" class="citation-link" target="_blank" rel="noopener noreferrer"><i data-lucide="external-link" style="width: 10px; height: 10px;"></i> Ver ficha oficial</a>` : ''}
+            </div>
+          `;
+        }).join('')}
       `;
       
       container.scrollTop = container.scrollHeight;
@@ -3208,8 +3224,8 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       speechRecognitionInstance.start();
     }
 
-    // Gemini se consulta desde una función segura de Vercel; la clave nunca llega al navegador.
-    async function callGeminiAI(userQuery, ragResult) {
+    // MiniMax y el historial de Legispan se consultan desde una función segura de Vercel.
+    async function callLegalAI(userQuery, ragResult) {
       try {
         const messages = [...chatHistory, { role: 'user', text: userQuery }];
         const response = await fetch('/api/chat', {
@@ -3230,9 +3246,9 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         chatHistory = [...messages, { role: 'model', text: cleanText }].slice(-12);
         chatAnswerCache[chatCacheKey(userQuery)] = cleanText;
         saveChatState();
-        return cleanText;
+        return { text: cleanText, sources: data.sources || {} };
       } catch (err) {
-        console.error('Error al llamar a Gemini API:', err);
+        console.error('Error al llamar al asistente legal:', err);
         return null;
       }
     }

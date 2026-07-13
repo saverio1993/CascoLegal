@@ -194,9 +194,55 @@ function mergeSnapshot(previous, scan) {
   };
 }
 
+const QUERY_STOP_WORDS = new Set([
+  'para', 'como', 'sobre', 'donde', 'cuando', 'cual', 'cuales', 'quien', 'quienes',
+  'desde', 'hasta', 'entre', 'tiene', 'tienen', 'puedo', 'puede', 'quiero', 'necesito',
+  'dime', 'diga', 'dice', 'esta', 'esto', 'esa', 'ese', 'estos', 'estas', 'una', 'uno',
+  'unos', 'unas', 'que', 'por', 'con', 'sin', 'del', 'las', 'los', 'sus', 'hay', 'son',
+]);
+
+function getQueryTerms(query) {
+  return Array.from(new Set(normalizeText(query)
+    .split(/[^a-z0-9]+/)
+    .filter(term => term.length >= 3 && !QUERY_STOP_WORDS.has(term))));
+}
+
+function rankLegispanUpdates(snapshot, query, limit = 3) {
+  const items = Array.isArray(snapshot?.items) ? snapshot.items : [];
+  const normalizedQuery = normalizeText(query);
+  const terms = getQueryTerms(query);
+  const asksAboutMotorcycles = /\bmoto|motocic|ciclomotor|motonet|tricicl/.test(normalizedQuery);
+  const asksAboutUpdates = /ultima|reciente|nueva|novedad|gaceta|legispan|actualiza/.test(normalizedQuery);
+
+  const ranked = items.map(item => {
+    const title = normalizeText(`${item.normType || ''} ${item.normNumber || ''} ${item.title || ''}`);
+    const summary = normalizeText(item.summary);
+    const metadata = normalizeText(`gaceta ${item.gazetteNumber || ''} ${item.gazettePublishedAt || ''}`);
+    let score = 0;
+    let specificScore = 0;
+
+    for (const term of terms) {
+      if (title.includes(term)) { score += 8; specificScore += 8; }
+      if (summary.includes(term)) { score += 4; specificScore += 4; }
+      if (metadata.includes(term)) { score += 5; specificScore += 5; }
+    }
+    if (asksAboutMotorcycles) score += 1;
+    if (asksAboutUpdates) score += 1;
+
+    return { item, score, specificScore };
+  });
+  const hasSpecificMatch = ranked.some(result => result.specificScore > 0);
+
+  return ranked.filter(result => result.score > 0 && (!hasSpecificMatch || result.specificScore > 0))
+    .sort((a, b) => b.score - a.score || String(b.item.gazettePublishedAt || '').localeCompare(String(a.item.gazettePublishedAt || '')))
+    .slice(0, Math.max(1, Math.min(limit, 5)))
+    .map(result => result.item);
+}
+
 module.exports = {
   isMotorcycleNorm,
   mergeSnapshot,
+  rankLegispanUpdates,
   readSnapshot,
   scanLatestGazettes,
   writeSnapshot,
