@@ -2135,9 +2135,9 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     // Offline PDFs download & caching
     async function startOfflineCacheDownload() {
       const pdfUrls = [
-        './pdfs/Decreto_Ejecutivo_640_2006.pdf',
-        './pdfs/Decreto_Ejecutivo_19_2022.pdf',
-        './pdfs/Resolucion_OAL_973_2013.pdf'
+        'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_640_2006.pdf',
+        'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_19_2022.pdf',
+        'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
       ];
       
       const progressBox = document.getElementById('download-progress-box');
