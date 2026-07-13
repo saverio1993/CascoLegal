@@ -1,8 +1,9 @@
-const CACHE_NAME = 'cascolegal-v7';
+const CACHE_NAME = 'cascolegal-v8';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './assets/bikers-society-logo.jpg',
   'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap'
 ];
 

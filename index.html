@@ -2210,8 +2210,19 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+          .then(reg => {
+            console.log('Service Worker registrado con éxito:', reg.scope);
+            reg.update();
+          })
           .catch(err => console.error('Error al registrar Service Worker:', err));
+
+        let reloadedAfterUpdate = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!reloadedAfterUpdate && navigator.serviceWorker.controller) {
+            reloadedAfterUpdate = true;
+            window.location.reload();
+          }
+        });
       });
     }
 
