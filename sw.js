@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cascolegal-v12';
+const CACHE_NAME = 'cascolegal-v13';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -51,8 +51,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Network-First para navegación (HTML) y manifest.json
-  if (event.request.mode === 'navigate' || url.pathname.endsWith('manifest.json')) {
+  // Network-First para navegación, manifest y datos que cambian diariamente.
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('manifest.json') || url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(event.request).then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200) {

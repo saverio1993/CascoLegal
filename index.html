@@ -595,6 +595,96 @@
       line-height: 1.4;
     }
 
+    .latest-laws-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+
+    .latest-laws-heading small {
+      font-family: var(--font-body);
+      color: var(--status-vigente);
+      font-size: 0.58rem;
+      font-weight: 500;
+    }
+
+    .law-card.legispan-update {
+      cursor: default;
+      border-left-color: #38bdf8;
+      background: linear-gradient(145deg, rgba(14, 165, 233, 0.09), var(--phone-card-bg) 52%);
+    }
+
+    .badge-legispan {
+      background: rgba(56, 189, 248, 0.14);
+      color: #7dd3fc;
+    }
+
+    .latest-law-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      margin-top: 0.65rem;
+    }
+
+    .latest-law-footer small {
+      color: var(--color-text-muted);
+      font-size: 0.58rem;
+      line-height: 1.3;
+    }
+
+    .btn-legispan-source {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.34rem 0.55rem;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 7px;
+      background: rgba(14, 165, 233, 0.12);
+      color: #7dd3fc;
+      font-family: var(--font-body);
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .legispan-monitor-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      padding: 0.85rem;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.07);
+    }
+
+    .legispan-monitor-card .monitor-icon {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--status-vigente);
+    }
+
+    .legispan-monitor-card strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-family: var(--font-title);
+      font-size: 0.7rem;
+    }
+
+    .legispan-monitor-card p,
+    .legispan-monitor-card small {
+      color: var(--color-text-muted);
+      font-size: 0.6rem;
+      line-height: 1.4;
+    }
+
     /* CARD VERIFICAR AFIRMACION / MODO AGENTE */
     .promo-card {
       background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(245,158,11,0.05));
@@ -1960,7 +2050,10 @@
 
               <!-- Updates -->
               <div class="home-section-title">
-                Ultimas Leyes Aprobadas
+                <div class="latest-laws-heading">
+                  Últimas Leyes Aprobadas
+                  <small>Monitoreo diario de Legispan</small>
+                </div>
                 <span onclick="goToScreen('screen-library')">Ver todo</span>
               </div>
               
@@ -2421,26 +2514,92 @@
       lucide.createIcons();
     }
 
-    // Muestra las normas más recientes disponibles en el catálogo legal local.
-    function renderLatestLaws() {
+    function formatLegalUpdateDate(value) {
+      if (!value) return 'fecha no indicada';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleDateString('es-PA', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function safeLegispanUrl(value) {
+      try {
+        const url = new URL(value);
+        return url.protocol === 'https:' && url.hostname === 'legispan.asamblea.gob.pa' ? url.href : '#';
+      } catch (_) {
+        return '#';
+      }
+    }
+
+    function renderLegispanMonitorState(data) {
+      const checkedAt = data?.checkedAt
+        ? `Última revisión: ${formatLegalUpdateDate(data.checkedAt)}`
+        : 'La primera revisión automática se ejecutará en breve.';
+      return `
+        <div class="legispan-monitor-card">
+          <div class="monitor-icon"><i data-lucide="radar" style="width: 16px; height: 16px;"></i></div>
+          <div>
+            <strong>Monitoreo legal activo</strong>
+            <p>No se detectaron normas nuevas para motociclistas en las Gacetas revisadas.</p>
+            <small>${escapeHTML(checkedAt)}</small>
+          </div>
+        </div>
+      `;
+    }
+
+    // Muestra las normas detectadas diariamente en Legispan.
+    async function renderLatestLaws() {
       const container = document.getElementById('latest-laws-list');
       if (!container) return;
 
-      const latest = [...SIMULATOR_DB]
-        .filter((art, index, all) => all.findIndex(item => item.documentNumber === art.documentNumber) === index)
-        .sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')));
-
-      container.innerHTML = latest.slice(0, 3).map(art => `
-        <div class="law-card">
-          <div class="law-card-header">
-            <span>${escapeHTML(art.documentType)} N° ${escapeHTML(art.documentNumber)}</span>
-            <span class="law-badge badge-vigente">Vigente</span>
-          </div>
-          <h6>Artículo ${escapeHTML(art.articleNumber)}: ${escapeHTML(art.title)}</h6>
-          <p>${escapeHTML(art.content)}</p>
-          <small style="display:block; margin-top: 0.5rem; color: var(--color-text-muted);">Actualizado: ${escapeHTML(art.publishedAt || 'fecha no indicada')}</small>
+      container.innerHTML = `
+        <div class="legispan-monitor-card">
+          <div class="monitor-icon"><i data-lucide="loader-circle" class="spin" style="width: 16px; height: 16px;"></i></div>
+          <div><strong>Consultando Legispan…</strong><p>Verificando las últimas Gacetas Oficiales.</p></div>
         </div>
-      `).join('');
+      `;
+      lucide.createIcons();
+
+      try {
+        const response = await fetch('/api/latest-laws', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const items = Array.isArray(data?.items) ? data.items.slice(0, 3) : [];
+
+        if (!items.length) {
+          container.innerHTML = renderLegispanMonitorState(data);
+          lucide.createIcons();
+          return;
+        }
+
+        container.innerHTML = items.map(item => {
+          const sourceUrl = safeLegispanUrl(item.sourceUrl);
+          const normLabel = `${item.normType || 'Norma'} N° ${item.normNumber || 'S/N'}`;
+          return `
+            <div class="law-card legispan-update">
+              <div class="law-card-header">
+                <span>Gaceta Oficial N° ${escapeHTML(item.gazetteNumber || 'S/N')}</span>
+                <span class="law-badge badge-legispan">Detectada</span>
+              </div>
+              <h6>${escapeHTML(normLabel)}: ${escapeHTML(item.title || '')}</h6>
+              <p>${escapeHTML(item.summary || '')}</p>
+              <div class="latest-law-footer">
+                <small>Publicada: ${escapeHTML(formatLegalUpdateDate(item.gazettePublishedAt || item.publishedAt))}<br>Fuente: Asamblea Nacional</small>
+                ${sourceUrl !== '#' ? `<a class="btn-legispan-source" href="${escapeHTML(sourceUrl)}" target="_blank" rel="noopener noreferrer"><i data-lucide="external-link" style="width: 11px; height: 11px;"></i> Ver ficha</a>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+        lucide.createIcons();
+      } catch (error) {
+        console.warn('No se pudo consultar el monitoreo de Legispan:', error);
+        container.innerHTML = `
+          <div class="legispan-monitor-card">
+            <div class="monitor-icon"><i data-lucide="wifi-off" style="width: 16px; height: 16px;"></i></div>
+            <div><strong>Información guardada sin conexión</strong><p>El monitoreo volverá a sincronizarse cuando haya internet.</p></div>
+          </div>
+        `;
+        lucide.createIcons();
+      }
     }
     
     // MODO MOSTRAR AL AGENTE TRANSITO ACTIONS

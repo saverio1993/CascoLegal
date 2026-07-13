@@ -1,6 +1,17 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "functions": {
+    "api/cron/legispan.js": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/legispan",
+      "schedule": "0 12 * * *"
+    }
+  ],
   "routes": [
     {
       "src": "/sw.js",
