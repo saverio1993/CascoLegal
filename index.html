@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CascoLegal — Portal de Desarrollo y Simulador de Sistemas</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons for high fidelity UI -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* VARIABLES Y DISEÑO SYSTEM - MODERN DARK MODE */
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #151e33;
+      --bg-card-hover: #1e294b;
+      --border-color: #24355a;
+      
+      --color-primary: #3b82f6; /* Azul cobalto tecnológico */
+      --color-secondary: #f59e0b; /* Oro / Bronce de acento */
+      --color-text-main: #f1f5f9;
+      --color-text-muted: #94a3b8;
+      
+      /* Colores de estado de vigencia */
+      --status-vigente: #10b981; /* Verde esmeralda */
+      --status-modificado: #f59e0b; /* Ámbar */
+      --status-derogado: #ef4444; /* Carmesí */
+      --status-pendiente: #6b7280; /* Gris */
+      --status-duda: #eab308; /* Amarillo */
+      
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      --phone-screen-bg: #090d16;
+      --phone-card-bg: #111a2e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-color) transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--color-text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      background-color: rgba(21, 30, 51, 0.7);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .brand-info h1 {
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .brand-info p {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background-color: rgba(11, 15, 25, 0.6);
+      padding: 0.25rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      padding: 0.5rem 1rem;
+      font-family: var(--font-title);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--color-text-main);
+    }
+
+    .tab-btn.active {
+      background-color: var(--color-primary);
+      color: var(--color-text-main);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      max-width: 1440px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* VIRTUAL WORKSPACE SPLIT LAYOUT */
+    .workspace {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    /* TAB PANELS */
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* PHONE SHELL (SIMULADOR ANDROID) */
+    .phone-wrapper {
+      position: sticky;
+      top: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .phone-shell {
+      width: 360px;
+      height: 720px;
+      background-color: #000;
+      border: 10px solid #222;
+      border-radius: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(59, 130, 246, 0.15);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Android Camera Notch */
+    .phone-notch {
+      width: 120px;
+      height: 25px;
+      background-color: #000;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .camera-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #111;
+      box-shadow: inset 0 0 2px #fff;
+    }
+
+    /* Android Status Bar */
+    .phone-status-bar {
+      height: 35px;
+      background-color: var(--phone-screen-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 1.25rem 4px 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      z-index: 999;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Phone Screen Content Container */
+    .phone-screen {
+      flex: 1;
+      background-color: var(--phone-screen-bg);
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-screen::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Android Bottom Navigation Bar */
+    .phone-navbar {
+      height: 56px;
+      background-color: var(--phone-card-bg);
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 0.5rem;
+      z-index: 999;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      font-size: 0.65rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      flex: 1;
+      height: 100%;
+    }
+
+    .nav-item i {
+      margin-bottom: 2px;
+      font-size: 1.2rem;
+    }
+
+    .nav-item.active {
+      color: var(--color-primary);
+    }
+
+    /* MOBILE SCREENS DEFINITIONS */
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      padding: 1rem;
+      animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(30px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* -- SCREEN: SPLASH -- */
+    #screen-splash {
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #1e3a8a, #090d16);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .splash-logo {
+      width: 90px;
+      height: 90px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: var(--font-title);
+      font-size: 2.5rem;
+      color: #fff;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+    }
+
+    .splash-title {
+      font-family: var(--font-title);
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .splash-subtitle {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    /* -- SCREEN: ONBOARDING -- */
+    #screen-onboarding {
+      justify-content: space-between;
+      padding: 2rem 1.5rem;
+    }
+
+    .onboard-content {
+      margin-top: 2rem;
+    }
+
+    .onboard-card {
+      background-color: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .onboard-card h3 {
+      font-family: var(--font-title);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--color-secondary);
+    }
+
+    .onboard-card p {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, var(--color-primary), #2563eb);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem;
+      font-family: var(--font-title);
+      font-weight: 600;
+      font-size: 0.95rem;
+      width: 100%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+
+    /* -- SCREEN: HOME -- */
+    .home-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .user-greeting h4 {
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .user-greeting p {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+    }
+
+    .alert-badge {
+      width: 10px;
+      height: 10px;
+      background-color: var(--status-derogado);
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      right: 2px;
+    }
+
+    .search-trigger-container {
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-bottom: 1.25rem;
+      transition: background-color 0.2s;
+    }
+
+    .search-trigger-container:hover {
+      background-color: rgba(255,255,255,0.02);
+    }
+
+    .grid-shortcuts {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .shortcut-card {
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .shortcut-card:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+    }
+
+    .shortcut-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shortcut-card h5 {
+      font-family: var(--font-title);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .shortcut-card p {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      line-height: 1.3;
+    }
+
+    .home-section-title {
+      font-family: var(--font-title);
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .home-section-title span {
+      font-size: 0.7rem;
+      color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    /* Cards legales de actualización */
+    .update-carousel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .law-card {
+      background-color: var(--phone-card-bg);
+      border-left: 4px solid var(--status-vigente);
+      border-top: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.85rem;
+      cursor: pointer;
+    }
+
+    .law-card.modified {
+      border-left-color: var(--status-modificado);
+    }
+
+    .law-card-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .law-badge {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-vigente {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--status-vigente);
+    }
+
+    .badge-modificado {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: var(--status-modificado);
+    }
+
+    .law-card h6 {
+      font-family: var(--font-title);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      line-height: 1.3;
+    }
+
+    .law-card p {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    /* CARD VERIFICAR AFIRMACION / MODO AGENTE */
+    .promo-card {
+      background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(245,158,11,0.05));
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+
+    .promo-info h5 {
+      font-family: var(--font-title);
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.15rem;
+    }
+
+    .promo-info p {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      line-height: 1.3;
+    }
+
+    /* -- SCREEN: BUSCADOR & CHAT IA -- */
+    .screen-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 0.75rem;
+    }
+
+    .screen-header h4 {
+      font-family: var(--font-title);
+      font-size: 1rem;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      color: var(--color-text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-right: 2px;
+    }
+
+    .chat-msg {
+      max-width: 85%;
+      padding: 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+
+    .chat-msg.user {
+      background-color: var(--color-primary);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 2px;
+    }
+
+    .chat-msg.assistant {
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--color-text-main);
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+
+    .disclaimer-box {
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      background-color: rgba(255,255,255,0.02);
+      border: 1px dashed var(--border-color);
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+
+    .source-citation-card {
+      background-color: rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-top: 0.75rem;
+      padding: 0.5rem;
+      font-size: 0.65rem;
+    }
+
+    .citation-title {
+      font-weight: 700;
+      color: var(--color-secondary);
+      margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .citation-link {
+      color: var(--color-primary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: white;
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      padding: 0.5rem;
+      outline: none;
+    }
+
+    .btn-icon-send {
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .btn-icon-voice {
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+    }
+
+    .suggested-tags {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag-bubble {
+      background-color: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tag-bubble:hover {
+      background-color: rgba(59,130,246,0.1);
+      border-color: var(--color-primary);
+    }
+
+    /* -- SCREEN: VERIFICADOR DE AFIRMACIONES -- */
+    .verifier-input-box {
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .verifier-textarea {
+      width: 100%;
+      height: 70px;
+      background: none;
+      border: none;
+      color: white;
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      resize: none;
+      outline: none;
+    }
+
+    .verif-result-card {
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .verif-status-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-title);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .badge-status {
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-confirmada { background-color: rgba(16,185,129,0.15); color: var(--status-vigente); }
+    .status-parcial { background-color: rgba(245,158,11,0.15); color: var(--status-modificado); }
+    .status-duda { background-color: rgba(234,179,8,0.15); color: var(--status-duda); }
+    .status-contradicha { background-color: rgba(239,68,68,0.15); color: var(--status-derogado); }
+
+    /* -- SCREEN: MODO MOSTRAR AL AGENTE -- */
+    #screen-agent-mode {
+      background-color: #05080f;
+    }
+
+    .agent-header {
+      background-color: #0b0f19;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .agent-header p {
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .agent-law-display {
+      background-color: #fff;
+      color: #000;
+      border-radius: 16px;
+      padding: 1.5rem 1.25rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .agent-law-title {
+      font-family: var(--font-title);
+      font-size: 0.9rem;
+      font-weight: 800;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 0.75rem;
+      margin-bottom: 0.75rem;
+      color: #111;
+    }
+
+    .agent-law-body {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      font-weight: 500;
+      color: #222;
+      flex: 1;
+    }
+
+    .agent-law-footer {
+      border-top: 1px solid #eee;
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.65rem;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .agent-qr-section {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      background-color: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.75rem;
+      font-size: 0.65rem;
+    }
+
+    .qr-box {
+      width: 50px;
+      height: 50px;
+      background-color: white;
+      border-radius: 6px;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* RIGHT CONTAINER: WEB ADMINISTRATIVE PANEL & RAG PLAYGROUND */
+    .main-workspace-content {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 2rem;
+      min-height: 720px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* RAG PLAYGROUND PANEL */
+    .playground-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .playground-header h2 {
+      font-family: var(--font-title);
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      background: linear-gradient(135deg, #fff, var(--color-text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .playground-header p {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ADMIN WEB INTERFACE DESIGN */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .admin-stat-card {
+      background-color: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-val {
+      font-family: var(--font-title);
+      font-size: 1.75rem;
+      font-weight: 800;
+    }
+
+    /* TABLA DE APROBACIONES DE DOCUMENTOS */
+    .admin-table-container {
+      background-color: rgba(255,255,255,0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+
+    .admin-table-title {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-title);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--color-text-muted);
+      background-color: rgba(0,0,0,0.15);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .btn-secondary {
+      background-color: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-family: var(--font-title);
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background-color 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .btn-success {
+      background-color: var(--status-vigente);
+      border: none;
+      color: white;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    /* RAG SIMULATOR CONTROLS */
+    .rag-tester {
+      background-color: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tester-inputs {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .tester-input {
+      flex: 1;
+      background-color: rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: white;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .tester-input:focus {
+      border-color: var(--color-primary);
+    }
+
+    .btn-run-rag {
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      font-family: var(--font-title);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* RAG STEP BY STEP ARCHITECTURE PREVIEW */
+    .rag-steps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .step-box {
+      background-color: rgba(255,255,255,0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+
+    .step-box-title {
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--color-secondary);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-content {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+      background-color: rgba(0,0,0,0.15);
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.02);
+      font-family: monospace;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    /* DOCS PANEL */
+    .doc-section {
+      margin-bottom: 2rem;
+    }
+
+    .doc-section h3 {
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      color: var(--color-secondary);
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .doc-section p {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .doc-code {
+      background-color: rgba(0,0,0,0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #a7f3d0;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    /* OFFLINE & PWA CARD STYLING */
+    .offline-pwa-card {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(21, 30, 51, 0.8));
+      border: 1px dashed var(--border-color);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+    }
+    
+    .pwa-card-header {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    
+    .pwa-card-icon {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: var(--color-primary);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .pwa-card-text h5 {
+      font-family: var(--font-title);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .pwa-card-text p {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+    
+    .pwa-action-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    
+    .btn-pwa-action {
+      flex: 1;
+      background-color: var(--phone-card-bg);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.5rem;
+      border-radius: 8px;
+      font-family: var(--font-title);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    
+    .btn-pwa-action:hover {
+      background-color: var(--bg-card-hover);
+      border-color: var(--color-primary);
+    }
+    
+    .pwa-install-btn {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    
+    .pwa-install-btn:hover {
+      background-color: #2563eb;
+    }
+    
+    /* DOWNLOAD PROGRESS BAR */
+    .download-progress-container {
+      margin-top: 0.5rem;
+      background-color: rgba(0,0,0,0.25);
+      border-radius: 8px;
+      padding: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.02);
+    }
+    
+    .progress-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+      margin-bottom: 0.25rem;
+    }
+    
+    .progress-bar-track {
+      height: 6px;
+      background-color: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-primary), #10b981);
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.1s ease;
+    }
+
+    /* RESPONSIVE PWA MOBILE FIRST VIEWPORT */
+    @media (max-width: 768px) {
+      header {
+        display: none !important;
+      }
+      .workspace {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .container {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .phone-wrapper h3 {
+        display: none !important;
+      }
+      .phone-wrapper {
+        position: relative !important;
+        top: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      .phone-shell {
+        width: 100vw !important;
+        height: 100vh !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+      .phone-notch {
+        display: none !important;
+      }
+      .phone-status-bar {
+        height: 24px !important;
+        padding-top: 4px !important;
+      }
+      .main-workspace-content {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">CL</div>
+      <div class="brand-info">
+        <h1>CascoLegal</h1>
+        <p>Sistema Inteligente de Información Legal para Motociclistas</p>
+      </div>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchMainTab('simulator')">
+        <i data-lucide="smartphone"></i> Simulador MVP
+      </button>
+      <button class="tab-btn" onclick="switchMainTab('admin')">
+        <i data-lucide="settings"></i> Consola Admin Web
+      </button>
+      <button class="tab-btn" onclick="switchMainTab('architecture')">
+        <i data-lucide="cpu"></i> Arquitectura y RAG
+      </button>
+    </div>
+    
+    <div style="font-size: 0.8rem; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
+      <span style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--status-vigente);"></span>
+      Entorno de Desarrollo MVP Activo
+    </div>
+  </header>
+
+  <!-- CONTAINER -->
+  <div class="container">
+    
+    <!-- MAIN WORKSPACE -->
+    <div class="workspace">
+      
+      <!-- LEFT SIDE: MOBILE ANDROID SIMULATOR (STATIC FOR ALL TABS) -->
+      <div class="phone-wrapper">
+        <h3 style="font-family: var(--font-title); font-size: 1rem; font-weight: 600; color: var(--color-text-muted); display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="smartphone"></i> Simulación de Dispositivo Android
+        </h3>
+        
+        <div class="phone-shell">
+          <!-- Notch -->
+          <div class="phone-notch">
+            <div class="camera-lens"></div>
+          </div>
+          
+          <!-- Status Bar -->
+          <div class="phone-status-bar">
+            <span id="phone-time">23:36</span>
+            <div class="status-icons">
+              <i data-lucide="wifi" style="width: 12px; height: 12px;"></i>
+              <i data-lucide="battery" style="width: 12px; height: 12px;"></i>
+            </div>
+          </div>
+          
+          <!-- Screen Contents -->
+          <div class="phone-screen" id="phone-screen-container">
+            
+            <!-- SCREEN: SPLASH -->
+            <div class="screen active" id="screen-splash" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-bottom: 2rem;">
+              <div></div>
+              <div style="text-align: center;">
+                <div class="splash-logo">CL</div>
+                <h2 class="splash-title">CascoLegal</h2>
+                <p class="splash-subtitle">“Un ciudadano informado conoce y defiende sus derechos”</p>
+                <div style="margin-top: 2rem; transform: scale(0.8); display: inline-block;">
+                  <button class="btn-action" onclick="goToScreen('screen-onboarding')">
+                    Ingresar <i data-lucide="arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+              <div style="text-align: center; font-size: 0.65rem; color: var(--color-text-muted); padding: 0 1rem; line-height: 1.3;">
+                Desarrollado y creado por el Grupo del Club de<br><strong>Panamá Bike Society</strong>
+              </div>
+            </div>
+            
+            <!-- SCREEN: ONBOARDING -->
+            <div class="screen" id="screen-onboarding">
+              <div class="onboard-content">
+                <h3 style="font-family: var(--font-title); font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Bienvenido a CascoLegal</h3>
+                <p style="font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4;">
+                  La primera plataforma de información y consulta legal en Panamá diseñada específicamente para motociclistas.
+                </p>
+                
+                <div class="onboard-card">
+                  <h3><i data-lucide="shield-check"></i> Regla de Hierro Informativa</h3>
+                  <p>
+                    Toda la información expuesta por nuestro asistente virtual o buscador proviene estrictamente de gacetas oficiales y resoluciones vigentes de la República de Panamá. No inventamos leyes ni regulaciones.
+                  </p>
+                </div>
+                
+                <div class="onboard-card" style="margin-top: 1rem;">
+                  <h3><i data-lucide="alert-triangle"></i> Descargo de Responsabilidad</h3>
+                  <p>
+                    Esta aplicación funciona únicamente como una herramienta informativa de consulta. No emite asesoramiento jurídico formal ni sustituye a un profesional calificado.
+                  </p>
+                </div>
+              </div>
+              
+              <button class="btn-action" onclick="goToScreen('screen-home')">
+                Aceptar y Continuar
+              </button>
+              
+              <div style="text-align: center; font-size: 0.6rem; color: var(--color-text-muted); margin-top: 1rem; margin-bottom: 1rem; line-height: 1.3;">
+                Creado por el Grupo del Club de <strong>Panamá Bike Society</strong>
+              </div>
+            </div>
+            
+            <!-- SCREEN: HOME -->
+            <div class="screen" id="screen-home">
+              <div class="home-header">
+                <div class="user-greeting">
+                  <h4>Hola, Conductor</h4>
+                  <p>Panamá • Consulta Oficial</p>
+                </div>
+                <div style="position: relative; background-color: var(--phone-card-bg); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+                  <i data-lucide="bell" style="width: 16px; height: 16px;"></i>
+                  <span class="alert-badge"></span>
+                </div>
+              </div>
+              
+              <!-- Search Trigger Box -->
+              <div class="search-trigger-container" onclick="goToScreen('screen-chat')">
+                <i data-lucide="search" style="width: 16px; height: 16px; color: var(--color-primary);"></i>
+                <span>¿Es obligatorio usar chaleco...?</span>
+                <i data-lucide="mic" style="width: 16px; height: 16px; margin-left: auto;"></i>
+              </div>
+              
+              <!-- Grid Shortcuts -->
+              <div class="grid-shortcuts">
+                <div class="shortcut-card" onclick="triggerPresetQuery('chaleco')">
+                  <div class="shortcut-icon"><i data-lucide="shirt" style="width: 16px; height: 16px;"></i></div>
+                  <h5>Chalecos</h5>
+                  <p>Normas de prendas reflectivas</p>
+                </div>
+                <div class="shortcut-card" onclick="triggerPresetQuery('delivery')">
+                  <div class="shortcut-icon" style="color: var(--color-secondary); background-color: rgba(245,158,11,0.1);"><i data-lucide="package" style="width: 16px; height: 16px;"></i></div>
+                  <h5>Delivery</h5>
+                  <p>Decreto 19 de 2022 de carga</p>
+                </div>
+                <div class="shortcut-card" onclick="triggerPresetQuery('licencia')">
+                  <div class="shortcut-icon"><i data-lucide="user-check" style="width: 16px; height: 16px;"></i></div>
+                  <h5>Licencia</h5>
+                  <p>Requisitos de la Tipo B de moto</p>
+                </div>
+                <div class="shortcut-card" onclick="triggerPresetQuery('retencion')">
+                  <div class="shortcut-icon"><i data-lucide="truck" style="width: 16px; height: 16px;"></i></div>
+                  <h5>Retención</h5>
+                  <p>Cuándo se lleva la moto la grúa</p>
+                </div>
+              </div>
+              
+              <!-- PWA Installation and Caching Card -->
+              <div class="offline-pwa-card" id="pwa-card">
+                <div class="pwa-card-header">
+                  <div class="pwa-card-icon"><i data-lucide="cloud-off" style="width: 18px; height: 18px;"></i></div>
+                  <div class="pwa-card-text">
+                    <h5>¿Vas a salir a rodar?</h5>
+                    <p>Guarda los PDFs de tránsito offline para mostrarlos en carretera sin señal.</p>
+                  </div>
+                </div>
+                
+                <!-- Progress bar -->
+                <div class="download-progress-container" id="download-progress-box" style="display: none;">
+                  <div class="progress-info-row">
+                    <span id="download-status-lbl" style="font-size: 0.65rem;">Descargando PDFs...</span>
+                    <span id="download-percent-lbl" style="font-size: 0.65rem; font-weight: 700;">0%</span>
+                  </div>
+                  <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="download-progress-fill"></div>
+                  </div>
+                </div>
+
+                <div class="pwa-action-row">
+                  <button class="btn-pwa-action" id="btn-download-offline" onclick="startOfflineCacheDownload()">
+                    <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar PDFs Offline
+                  </button>
+                  <button class="btn-pwa-action pwa-install-btn" id="btn-install-app" style="display: none;" onclick="triggerPWAInstall()">
+                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i> Instalar App
+                  </button>
+                </div>
+              </div>
+
+              <!-- Promo Cards -->
+              <div class="promo-card" onclick="goToScreen('screen-verifier')">
+                <div style="background-color: rgba(59,130,246,0.15); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+                  <i data-lucide="check-square" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="promo-info">
+                  <h5>Verificador de Afirmaciones</h5>
+                  <p>Comprueba si una supuesta ley de tránsito existe.</p>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; margin-left: auto; color: var(--color-text-muted);"></i>
+              </div>
+              
+              <div class="promo-card" style="background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0.1));" onclick="showAgentScreen('33333333-3333-3333-3333-333333333304')">
+                <div style="background-color: rgba(239,68,68,0.15); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--status-derogado);">
+                  <i data-lucide="alert-octagon" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div class="promo-info">
+                  <h5>Modo Mostrar al Agente</h5>
+                  <p>Ficha rápida de artículo 40-A para operativos.</p>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; margin-left: auto; color: var(--color-text-muted);"></i>
+              </div>
+
+              <!-- Updates -->
+              <div class="home-section-title">
+                Ultimas Leyes Aprobadas
+                <span onclick="goToScreen('screen-library')">Ver todo</span>
+              </div>
+              
+              <div class="update-carousel">
+                <div class="law-card" onclick="showAgentScreen('33333333-3333-3333-3333-333333333304')">
+                  <div class="law-card-header">
+                    <span>Decreto Ejecutivo 19</span>
+                    <span class="law-badge badge-vigente">Vigente</span>
+                  </div>
+                  <h6>Artículo 40-A: Cajas y Contenedores</h6>
+                  <p>Establece rotulación obligatoria de placa de 7cm en color rojo sobre fondo blanco.</p>
+                </div>
+                <div class="law-card modified" onclick="showAgentScreen('33333333-3333-3333-3333-333333333301')">
+                  <div class="law-card-header">
+                    <span>Decreto Ejecutivo 640</span>
+                    <span class="law-badge badge-modificado">Modificado</span>
+                  </div>
+                  <h6>Artículo 104: Casco y Prendas</h6>
+                  <p>Uso obligatorio de casco de seguridad y aditamentos reflectivos al transitar.</p>
+                </div>
+              </div>
+              
+              <!-- Credits -->
+              <div style="text-align: center; font-size: 0.65rem; color: var(--color-text-muted); margin-top: 2rem; margin-bottom: 1.5rem; line-height: 1.4;">
+                Desarrollado y creado por el Grupo del Club de<br><strong style="color: var(--color-secondary);">Panamá Bike Society</strong>
+              </div>
+            </div>
+            
+            <!-- SCREEN: CHAT IA -->
+            <div class="screen" id="screen-chat">
+              <div class="screen-header">
+                <button class="btn-back" onclick="goToScreen('screen-home')">
+                  <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <h4>Consulta Inteligente (RAG)</h4>
+              </div>
+              
+              <div class="disclaimer-box">
+                <i data-lucide="info" style="width: 10px; height: 10px; display: inline; vertical-align: middle; margin-right: 2px;"></i>
+                Respuestas generadas estrictamente en base a documentos de la Gaceta Oficial de Panamá.
+              </div>
+              
+              <div class="chat-messages" id="chat-messages-container">
+                <div class="chat-msg assistant">
+                  ¡Hola! Soy tu asistente de CascoLegal. ¿Tienes alguna pregunta sobre el reglamento de tránsito, chalecos reflectivos, licencias de moto o delivery?
+                </div>
+              </div>
+              
+              <div class="suggested-tags">
+                <div class="tag-bubble" onclick="triggerPresetQuery('¿Es obligatorio el chaleco de noche?')">Chaleco nocturno</div>
+                <div class="tag-bubble" onclick="triggerPresetQuery('¿Qué necesito para hacer delivery?')">Delivery placa</div>
+                <div class="tag-bubble" onclick="triggerPresetQuery('¿Cuándo me pueden retener la moto?')">Retención grúa</div>
+              </div>
+              
+              <div class="chat-input-area">
+                <button class="btn-icon-voice" onclick="startVoiceMock()">
+                  <i data-lucide="mic" id="voice-icon" style="width: 16px; height: 16px;"></i>
+                </button>
+                <input type="text" class="chat-input" id="chat-user-input" placeholder="Pregunta sobre leyes de moto en Panamá..." onkeypress="handleChatEnter(event)">
+                <button class="btn-icon-send" onclick="sendChatMessage()">
+                  <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- SCREEN: VERIFICADOR DE AFIRMACIONES -->
+            <div class="screen" id="screen-verifier">
+              <div class="screen-header">
+                <button class="btn-back" onclick="goToScreen('screen-home')">
+                  <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <h4>Verificar Afirmación</h4>
+              </div>
+              <p style="font-size: 0.7rem; color: var(--color-text-muted); margin-bottom: 0.75rem; line-height: 1.4;">
+                Escribe o dicta algún rumor que hayas escuchado sobre multas o reglamentos en Panamá para comprobar si existe respaldo oficial.
+              </p>
+              
+              <div class="verifier-input-box">
+                <textarea class="verifier-textarea" id="verifier-text-input" placeholder="Ej: 'Un policía me dijo que el chaleco reflectivo es obligatorio desde las 6:00 p.m. y que la multa es de $50'"></textarea>
+                <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                  <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 6px;" onclick="runClaimVerification()">
+                    <i data-lucide="search" style="width: 12px; height: 12px;"></i> Validar
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Verifier result box -->
+              <div class="verif-result-card" id="verifier-result-box">
+                <div class="verif-status-header">
+                  <span>Resultado:</span>
+                  <span class="badge-status" id="verifier-badge-status">CONFIRMADA</span>
+                </div>
+                <p style="font-size: 0.75rem; line-height: 1.4; color: var(--color-text-main); margin-bottom: 0.75rem;" id="verifier-explanation"></p>
+                
+                <div style="border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                  <h6 style="font-size: 0.65rem; color: var(--color-secondary); margin-bottom: 4px; font-weight: 700;">Fundamento de Evidencia:</h6>
+                  <p style="font-size: 0.65rem; font-style: italic; color: var(--color-text-muted); line-height: 1.3;" id="verifier-evidence-text"></p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- SCREEN: MODO MOSTRAR AL AGENTE -->
+            <div class="screen" id="screen-agent-mode">
+              <div class="screen-header" style="border-bottom-color: #334155;">
+                <button class="btn-back" onclick="goToScreen('screen-home')" style="color: white;">
+                  <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <h4 style="color: white;">Ficha Técnica Oficial</h4>
+              </div>
+              
+              <div class="agent-header">
+                <p>Uso en Inspección de Tránsito</p>
+                <h5 style="font-family: var(--font-title); font-size: 0.75rem; color: var(--status-vigente); margin-top: 2px;">VIGENCIA CONFIRMADA POR ÚLTIMA VEZ: HOY</h5>
+              </div>
+              
+              <div class="agent-law-display">
+                <div>
+                  <div class="agent-law-title" id="agent-display-title">Artículo 40-A</div>
+                  <div class="agent-law-body" id="agent-display-body">
+                    Las motocicletas destinadas al servicio de transporte de carga, mensajería, entrega a domicilio o delivery deberán llevar el número de placa...
+                  </div>
+                </div>
+                
+                <div class="agent-law-footer">
+                  <span>Fuente: Gaceta Oficial 29641-A</span>
+                  <a href="#" class="citation-link" style="color: #2563eb;" id="agent-display-pdf-link" target="_blank">
+                    <i data-lucide="file-text" style="width: 12px; height: 12px;"></i> Ver PDF Oficial
+                  </a>
+                </div>
+              </div>
+              
+              <div class="agent-qr-section">
+                <div class="qr-box">
+                  <!-- Custom CSS QR Code Drawing Simulator -->
+                  <div style="width: 100%; height: 100%; background: radial-gradient(circle, #000 60%, transparent 60%), repeating-concentric-gradient(red, red 10px, white 10px, white 20px); border: 2px solid black;"></div>
+                </div>
+                <div>
+                  <p style="font-weight: 700; color: white;">Verificación Directa</p>
+                  <p style="color: var(--color-text-muted); font-size: 0.55rem; line-height: 1.3; margin-top: 2px;">El oficial puede escanear este código QR para contrastar este texto legal en el servidor gubernamental.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCREEN: BIBLIOTECA -->
+            <div class="screen" id="screen-library">
+              <div class="screen-header">
+                <button class="btn-back" onclick="goToScreen('screen-home')">
+                  <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <h4>Biblioteca Legal Completa</h4>
+              </div>
+              
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <input type="text" class="tester-input" placeholder="Buscar artículo, ley, año..." style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px; flex: 1;">
+              </div>
+              
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;" id="library-list-container">
+                <!-- Se poblará por JavaScript -->
+              </div>
+            </div>
+
+          </div>
+          
+          <!-- Bottom Navbar -->
+          <div class="phone-navbar">
+            <div class="nav-item active" onclick="goToScreen('screen-home')" id="nav-home">
+              <i data-lucide="home"></i>
+              <span>Inicio</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('screen-chat')" id="nav-chat">
+              <i data-lucide="message-square"></i>
+              <span>Preguntar</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('screen-verifier')" id="nav-verifier">
+              <i data-lucide="shield-alert"></i>
+              <span>Verificar</span>
+            </div>
+            <div class="nav-item" onclick="goToScreen('screen-library')" id="nav-library">
+              <i data-lucide="book-open"></i>
+              <span>Biblioteca</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- RIGHT SIDE: TAB CONTROLLED AREA -->
+      <div class="main-workspace-content">
+        
+        <!-- PANEL: SIMULADOR MVP PLAYGROUND -->
+        <div class="tab-panel active" id="panel-simulator">
+          <div class="playground-header">
+            <h2>Simulador del Sistema RAG & Consola de Pruebas</h2>
+            <p>Ejecuta consultas semánticas locales utilizando los datos reales sembrados de las leyes panameñas.</p>
+          </div>
+          
+          <div class="rag-tester">
+            <h3 style="font-family: var(--font-title); font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="terminal" style="color: var(--color-primary);"></i> Probar Consultas RAG
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.25rem;">
+              Escribe cualquier pregunta de tránsito (ej: "chaleco reflectivo", "placa delivery", "causas de retencion de vehiculo", "licencia tipo b"). El RAG procesará la búsqueda híbrida y responderá con citas y enlaces.
+            </p>
+            
+            <div class="tester-inputs">
+              <input type="text" class="tester-input" id="rag-playground-query" placeholder="Escribe tu consulta aquí..." value="¿Es obligatorio el chaleco reflectivo de noche?">
+              <button class="btn-run-rag" onclick="runRAGPlaygroundQuery()">
+                Ejecutar RAG <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- RAG Pipeline Trace Preview -->
+          <h3 style="font-family: var(--font-title); font-size: 1.1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-lucide="eye" style="color: var(--color-secondary);"></i> Trazabilidad del Pipeline RAG (Pasos Internos)
+          </h3>
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">
+            Aquí puedes ver exactamente cómo el sistema cascolegal Panamá procesa la consulta y recupera las fuentes oficiales.
+          </p>
+          
+          <div class="rag-steps-grid">
+            <div class="step-box">
+              <div class="step-box-title">
+                <i data-lucide="database"></i> Paso 1: Recuperación de Documentos (Búsqueda Híbrida)
+              </div>
+              <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--color-text-muted);">
+                Resultado de la consulta a la base de datos `articles` mediante filtrado y coincidencia de palabras clave:
+              </p>
+              <div class="step-content" id="rag-step1-output">
+                // Ejecuta la consulta para ver el trace
+              </div>
+            </div>
+            
+            <div class="step-box">
+              <div class="step-box-title">
+                <i data-lucide="code-2"></i> Paso 2: Prompt Completo del Sistema & LLM Context
+              </div>
+              <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: var(--color-text-muted);">
+                El contexto estructurado final inyectado al modelo de lenguaje (con directrices anti-alucinaciones):
+              </p>
+              <div class="step-content" id="rag-step2-output">
+                // Ejecuta la consulta para ver el trace
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- PANEL: ADMIN WEB CONSOLE -->
+        <div class="tab-panel" id="panel-admin">
+          <div class="playground-header">
+            <h2>Consola Web Administrativa cascolegal</h2>
+            <p>Administración y curación humana de normativas de tránsito, auditoría de cambios y gestión de fuentes oficiales.</p>
+          </div>
+          
+          <div class="admin-grid">
+            <div class="admin-stat-card">
+              <div class="stat-header">Fuentes Monitoreadas <i data-lucide="globe"></i></div>
+              <div class="stat-val">3 Fuentes</div>
+              <p style="font-size: 0.75rem; color: var(--status-vigente); margin-top: 0.25rem;">Todas activas e integradas</p>
+            </div>
+            <div class="admin-stat-card">
+              <div class="stat-header">Documentos Indexados <i data-lucide="file-check-2"></i></div>
+              <div class="stat-val">3 Documentos</div>
+              <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">5 Artículos en total</p>
+            </div>
+            <div class="admin-stat-card">
+              <div class="stat-header">Pendientes de Aprobación <i data-lucide="clock"></i></div>
+              <div class="stat-val" id="admin-pending-count" style="color: var(--color-secondary);">1 Ley</div>
+              <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Ingestado por scraper</p>
+            </div>
+          </div>
+          
+          <div class="admin-table-container">
+            <div class="admin-table-title">
+              Cola de Ingestión: Documentos Pendientes de Aprobación Humana
+              <span style="font-size: 0.75rem; font-weight: normal; color: var(--color-text-muted);">
+                Detector de reformas activo
+              </span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Documento / Origen</th>
+                  <th>Fecha de Publicación</th>
+                  <th>Estado del Scraper</th>
+                  <th>Detección de Reformas</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="admin-pending-tbody">
+                <tr id="pending-row-1">
+                  <td>
+                    <strong>Propuesta de Ley N° 345 (ATTT)</strong><br>
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted);">https://www.transito.gob.pa/propuesta-345</span>
+                  </td>
+                  <td>12 de Julio, 2026</td>
+                  <td><span class="law-badge" style="background-color: rgba(245,158,11,0.15); color: var(--color-secondary);">Pendiente</span></td>
+                  <td><span style="color: var(--status-derogado); font-weight: 500;">"Propone modificar Art. 104"</span></td>
+                  <td>
+                    <button class="btn-success" onclick="approveDocument('pending-row-1', 'Propuesta de Ley N° 345')">Aprobar y Publicar</button>
+                    <button class="btn-secondary" style="padding: 0.35rem 0.5rem; font-size: 0.75rem;" onclick="dismissRow('pending-row-1')">Rechazar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Audit Log Section -->
+          <div class="admin-table-container" style="margin-top: 2rem;">
+            <div class="admin-table-title">
+              Historial de Auditoría de Cambios Legales
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Acción</th>
+                  <th>Tabla Afectada</th>
+                  <th>Justificación</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>admin@cascolegal.pa</td>
+                  <td><span style="color: var(--status-vigente);">Aprobación de Documento</span></td>
+                  <td>legal_documents</td>
+                  <td>"Sembrado inicial del Decreto Ejecutivo 19 de 2022 para delivery"</td>
+                  <td>Hace 2 horas</td>
+                </tr>
+                <tr>
+                  <td>admin@cascolegal.pa</td>
+                  <td><span style="color: var(--status-vigente);">Establecer Relación</span></td>
+                  <td>normative_relations</td>
+                  <td>"Vinculación del Art. 40-A como reforma adicional al Reglamento"</td>
+                  <td>Hace 2 horas</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- PANEL: ARCHITECTURE DETAILS -->
+        <div class="tab-panel" id="panel-architecture">
+          <div class="playground-header">
+            <h2>Modelo del Sistema de Ingestión y RAG</h2>
+            <p>Detalles técnicos de la orquestación RAG y el modelo de datos de cascolegal Panamá.</p>
+          </div>
+          
+          <div class="doc-section">
+            <h3>1. Estrategia de Segmentación de Texto (Chunking)</h3>
+            <p>
+              En lugar de dividir los documentos legales en chunks de tamaño fijo (ej: 500 tokens), el ingestor cascolegal divide el texto de forma **atómica por artículos y subartículos**. Esto se debe a que las leyes tienen un significado lógico e independiente en cada artículo. Agrupar la información de esta manera previene que la búsqueda de RAG devuelva fragmentos de textos incompletos o mezcle el contexto de artículos distintos.
+            </p>
+          </div>
+          
+          <div class="doc-section">
+            <h3>2. Búsqueda Híbrida (Vectores + FTS)</h3>
+            <p>
+              El motor de búsqueda de cascolegal en Supabase PostgreSQL combina:
+            </p>
+            <div class="doc-code">
+-- Ejemplo de búsqueda híbrida en Supabase PostgreSQL
+CREATE OR REPLACE FUNCTION match_articles (
+  query_embedding vector(1536),
+  query_text text,
+  match_threshold float,
+  match_count int
+)
+RETURNS TABLE (
+  id uuid,
+  document_title text,
+  article_number text,
+  content text,
+  similarity float
+)
+LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    a.id,
+    d.title as document_title,
+    a.article_number,
+    a.content,
+    1 - (a.embedding <=> query_embedding) as similarity
+  FROM articles a
+  JOIN legal_documents d ON a.document_id = d.id
+  WHERE 
+    d.status_vigency IN ('vigente', 'parcialmente_vigente', 'modificado')
+    AND d.review_status = 'approved'
+    AND (
+      (1 - (a.embedding <=> query_embedding) > match_threshold)
+      OR to_tsvector('spanish', a.content) @@ to_tsquery('spanish', query_text)
+    )
+  ORDER BY similarity DESC
+  LIMIT match_count;
+END;
+$$;</div>
+          </div>
+          
+          <div class="doc-section">
+            <h3>3. Políticas de Seguridad de IA y Evitación de Alucinaciones</h3>
+            <p>
+              El prompt del sistema de cascolegal cuenta con cláusulas estrictas para impedir alucinaciones legales. Si el LLM no encuentra una coincidencia con un puntaje de confianza suficiente, responde de forma estandarizada:
+            </p>
+            <blockquote style="border-left: 4px solid var(--color-primary); padding: 0.5rem 1rem; background-color: rgba(255,255,255,0.02); font-style: italic; font-size: 0.9rem; margin-bottom: 1rem;">
+              "No se encontró una disposición oficial suficiente para confirmar esta afirmación en los términos indicados. Se encontraron las siguientes normas relacionadas..."
+            </blockquote>
+          </div>
+        </div>
+        
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // JS STATE MANAGEMENT
+    let currentScreen = 'screen-splash';
+    let currentMainTab = 'simulator';
+    
+    // Configuración inicial de Lucide Icons
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      updateTime();
+      setInterval(updateTime, 60000);
+      
+      // Cargar lista de biblioteca inicial
+      renderLibraryList();
+      
+      // Ejecutar consulta RAG inicial para poblar los campos de trace
+      runRAGPlaygroundQuery();
+    });
+    
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const timeElem = document.getElementById('phone-time');
+      if (timeElem) timeElem.textContent = timeStr;
+    }
+    
+    // Navegación de pantallas de la app
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+      const activeScr = document.getElementById(screenId);
+      if (activeScr) activeScr.classList.add('active');
+      
+      // Actualizar navbar inferior del simulador
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      if (screenId === 'screen-home') {
+        document.getElementById('nav-home').classList.add('active');
+      } else if (screenId === 'screen-chat') {
+        document.getElementById('nav-chat').classList.add('active');
+      } else if (screenId === 'screen-verifier') {
+        document.getElementById('nav-verifier').classList.add('active');
+      } else if (screenId === 'screen-library') {
+        document.getElementById('nav-library').classList.add('active');
+      }
+    }
+    
+    // Navegación de pestañas del portal web
+    function switchMainTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      
+      // Encontrar botón clicado
+      const eventTargetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (eventTargetBtn) eventTargetBtn.classList.add('active');
+      
+      const panel = document.getElementById('panel-' + tabId);
+      if (panel) panel.classList.add('active');
+    }
+    
+    // Datos locales de simulación (espejo de ragService.ts)
+    const SIMULATOR_DB = [
+      {
+        id: '33333333-3333-3333-3333-333333333301',
+        documentNumber: '640',
+        documentTitle: 'Reglamento de Tránsito Vehicular',
+        documentType: 'Decreto Ejecutivo',
+        articleNumber: '104',
+        title: 'Medidas de protección para motocicletas',
+        content: 'Los conductores de motocicletas, bicicletas y sus pasajeros deberán portar casco de protección y chalecos o aditamentos reflectivos, de acuerdo con el reglamento que para este efecto expida la Autoridad del Tránsito.',
+        statusVigency: 'vigente',
+        gazetteNumber: '25700',
+        gazetteUrl: 'https://www.transito.gob.pa/sites/default/files/documentos/decreto_ejecutivo_no.640_del_27_de_diciembre_de_2006.pdf',
+        keywords: ['casco', 'chaleco', 'reflectivo', 'proteccion', 'seguridad', 'pasajero', 'noche', 'obligatorio']
+      },
+      {
+        id: '33333333-3333-3333-3333-333333333302',
+        documentNumber: '640',
+        documentTitle: 'Reglamento de Tránsito Vehicular',
+        documentType: 'Decreto Ejecutivo',
+        articleNumber: '132',
+        title: 'Clasificación de Licencias',
+        content: 'Las licencias de conducir se clasifican de la siguiente manera: Tipo A: Bicicletas y ciclomotores de pedales. Tipo B: Motocicletas, motonetas, triciclos y cuadriciclos a motor. Tipo C: Automóviles de servicio particular.',
+        statusVigency: 'vigente',
+        gazetteNumber: '25700',
+        gazetteUrl: 'https://www.transito.gob.pa/sites/default/files/documentos/decreto_ejecutivo_no.640_del_27_de_diciembre_de_2006.pdf',
+        keywords: ['licencia', 'tipo b', 'motocicleta', 'requisito', 'edad', 'manejar']
+      },
+      {
+        id: '33333333-3333-3333-3333-333333333303',
+        documentNumber: '640',
+        documentTitle: 'Reglamento de Tránsito Vehicular',
+        documentType: 'Decreto Ejecutivo',
+        articleNumber: '241',
+        title: 'Retiro de Vehículos con Grúa',
+        content: 'La Autoridad del Tránsito o la Policía Nacional procederán al retiro del vehículo de la vía pública con grúa en los siguientes casos: a. Sin condiciones óptimas de seguridad. b. Embriaguez comprobada. c. Sin licencia de conducir. d. Sin placa única nacional o calcomanías obligatorias.',
+        statusVigency: 'vigente',
+        gazetteNumber: '25700',
+        gazetteUrl: 'https://www.transito.gob.pa/sites/default/files/documentos/decreto_ejecutivo_no.640_del_27_de_diciembre_de_2006.pdf',
+        keywords: ['retencion', 'grua', 'placa', 'embriaguez', 'licencia', 'operativo', 'llevarse', 'moto', 'retener']
+      },
+      {
+        id: '33333333-3333-3333-3333-333333333304',
+        documentNumber: '19',
+        documentTitle: 'Decreto Delivery de Motos',
+        documentType: 'Decreto Ejecutivo',
+        articleNumber: '40-A',
+        title: 'Identificación de motocicletas de delivery',
+        content: 'Las motocicletas destinadas al servicio de transporte de carga, mensajería o delivery deberán llevar el número de la placa única nacional impreso y plenamente visible en la parte trasera de la caja o bolso de carga. Si no usan caja, deberán portar un chaleco reflectivo con el número de placa impreso. Tipografía Arial, 7 cm de altura, color rojo sobre fondo blanco reflectivo.',
+        statusVigency: 'vigente',
+        gazetteNumber: '29641-A',
+        gazetteUrl: 'https://www.gacetaoficial.gob.pa/pdfTemp/29641_A/94595.pdf',
+        keywords: ['delivery', 'mensajeria', 'placa', 'chaleco', 'caja', 'rotulacion', 'rojo', 'blanco', 'reflectivo']
+      },
+      {
+        id: '33333333-3333-3333-3333-333333333305',
+        documentNumber: '973',
+        documentTitle: 'Medidas de Seguridad Vial Motos (OAL 973)',
+        documentType: 'Resolución OAL',
+        articleNumber: 'Primero',
+        title: 'Uso obligatorio de prenda reflectiva en horario nocturno',
+        content: 'Se establece el uso obligatorio de prendas de vestir reflectivas o de alta visibilidad para todos los conductores de motocicletas, motociclos, triciclos y sus acompañantes en el horario comprendido entre las 6:00 p.m. y las 6:00 a.m. durante su circulación en las vías públicas de la República de Panamá. El chaleco deberá llevar impreso en la parte posterior el número de placa de la motocicleta. Queda expresamente prohibido el uso de chalecos reflectivos de color verde limón.',
+        statusVigency: 'vigente',
+        gazetteNumber: '27349',
+        gazetteUrl: 'https://www.gacetaoficial.gob.pa/pdfTemp/27349/46083.pdf',
+        keywords: ['chaleco', 'placa', 'verde', 'prohibido', 'color', 'azul', 'gris', 'naranja', 'horario', 'noche', '6:00']
+      }
+    ];
+
+    // RENDER BIBLIOTECA LIST
+    function renderLibraryList() {
+      const container = document.getElementById('library-list-container');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      SIMULATOR_DB.forEach(art => {
+        const div = document.createElement('div');
+        div.className = 'law-card';
+        if (art.documentNumber === '640') div.classList.add('modified');
+        
+        div.innerHTML = `
+          <div class="law-card-header">
+            <span>${art.documentType} N° ${art.documentNumber}</span>
+            <span class="law-badge ${art.documentNumber === '640' ? 'badge-modificado' : 'badge-vigente'}">Vigente</span>
+          </div>
+          <h6>Artículo ${art.articleNumber}: ${art.title}</h6>
+          <p>${art.content}</p>
+          <div style="margin-top: 6px; display: flex; justify-content: flex-end;">
+            <button class="btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.6rem; border-radius: 4px;" onclick="showAgentScreen('${art.id}')">
+              <i data-lucide="eye" style="width: 10px; height: 10px;"></i> Modo Agente
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+      lucide.createIcons();
+    }
+    
+    // MODO MOSTRAR AL AGENTE TRANSITO ACTIONS
+    function showAgentScreen(articleId) {
+      const art = SIMULATOR_DB.find(item => item.id === articleId);
+      if (!art) return;
+      
+      document.getElementById('agent-display-title').textContent = `Artículo ${art.articleNumber}`;
+      document.getElementById('agent-display-body').textContent = art.content;
+      document.getElementById('agent-display-pdf-link').setAttribute('href', art.gazetteUrl);
+      
+      goToScreen('screen-agent-mode');
+    }
+    
+    // MOCK RAG ENGINE IN FRONTEND
+    function runLocalRAG(queryText) {
+      const normalized = queryText.toLowerCase();
+      
+      // Búsqueda simple de palabras
+      let scored = SIMULATOR_DB.map(art => {
+        let score = 0;
+        art.keywords.forEach(kw => {
+          if (normalized.includes(kw)) score += 3;
+        });
+        if (art.content.toLowerCase().includes(normalized)) score += 5;
+        if (normalized.includes(art.articleNumber.toLowerCase())) score += 10;
+        return { art, score };
+      });
+      
+      const matches = scored.filter(x => x.score > 0).sort((a,b) => b.score - a.score);
+      
+      const resultObj = {
+        query: queryText,
+        matches: matches.map(m => m.art),
+        prompt: `System Prompt: Responde con brevedad. Cita siempre.
+Contexto:
+${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${m.art.content}`).join('\n')}`
+      };
+      
+      return resultObj;
+    }
+    
+    // RUN PLAYGROUND QUERY
+    function runRAGPlaygroundQuery() {
+      const queryInput = document.getElementById('rag-playground-query');
+      const query = queryInput.value;
+      
+      const ragResult = runLocalRAG(query);
+      
+      // Escribir outputs en paneles de trazabilidad
+      const step1Div = document.getElementById('rag-step1-output');
+      const step2Div = document.getElementById('rag-step2-output');
+      
+      step1Div.innerHTML = JSON.stringify(ragResult.matches, null, 2);
+      step2Div.innerHTML = ragResult.prompt;
+      
+      // Si estamos en la pestaña del chat en el celular, inyectar respuesta ahí también
+      if (currentScreen === 'screen-chat') {
+        injectAnswerInPhoneChat(query, ragResult);
+      }
+    }
+    
+    // INJECT ANSWER IN PHONE CHAT
+    function injectAnswerInPhoneChat(userQuery, ragResult) {
+      const container = document.getElementById('chat-messages-container');
+      
+      // User message
+      const userMsgDiv = document.createElement('div');
+      userMsgDiv.className = 'chat-msg user';
+      userMsgDiv.textContent = userQuery;
+      container.appendChild(userMsgDiv);
+      
+      // Assistant RAG response builder
+      const asstMsgDiv = document.createElement('div');
+      asstMsgDiv.className = 'chat-msg assistant';
+      
+      let answerText = "";
+      if (ragResult.matches.length === 0) {
+        answerText = "De acuerdo con los documentos oficiales cargados, no se encontró una disposición oficial suficiente para confirmar esta afirmación.";
+      } else {
+        const topMatch = ragResult.matches[0];
+        if (userQuery.toLowerCase().includes('chaleco')) {
+          answerText = "En Panamá, es obligatorio usar chaleco reflectivo con tu número de placa de moto impreso en la espalda (colores: azul, naranja o gris). Los chalecos verde limón están prohibidos porque son exclusivos de la policía de tránsito.";
+        } else if (userQuery.toLowerCase().includes('delivery') || userQuery.toLowerCase().includes('caja')) {
+          answerText = "Sí, según el Decreto 19 de 2022, las motos de reparto deben rotular la placa visible en la parte trasera de la mochila o caja de carga (letras rojas, fondo blanco reflectivo, tipografía Arial de 7 cm).";
+        } else if (userQuery.toLowerCase().includes('retencion') || userQuery.toLowerCase().includes('grua')) {
+          answerText = "Sí, la grúa puede remover tu moto si manejas sin licencia de conducir, si no tienes placa única de circulación o calcomanía vigente, o bajo los efectos del alcohol (según Artículo 241).";
+        } else {
+          answerText = `Según el Artículo ${topMatch.articleNumber} del ${topMatch.documentType} N° ${topMatch.documentNumber}, se establece lo siguiente: ${topMatch.content}`;
+        }
+      }
+      
+      asstMsgDiv.innerHTML = `
+        <p><strong>Respuesta Breve:</strong></p>
+        <p style="margin-bottom: 8px;">${answerText}</p>
+        
+        ${ragResult.matches.map(m => `
+          <div class="source-citation-card">
+            <div class="citation-title">
+              <span>Fundamento Oficial: Art. ${m.articleNumber} (${m.documentType} ${m.documentNumber})</span>
+              <span class="law-badge badge-vigente" style="font-size: 0.55rem; padding: 0 4px;">Vigente</span>
+            </div>
+            <p style="font-size: 0.65rem; color: #cbd5e1; margin-bottom: 4px;">"${m.content}"</p>
+            <a href="${m.gazetteUrl}" class="citation-link" target="_blank">
+              <i data-lucide="external-link" style="width: 10px; height: 10px;"></i> Gaceta Oficial N° ${m.gazetteNumber}
+            </a>
+          </div>
+        `).join('')}
+      `;
+      
+      container.appendChild(asstMsgDiv);
+      container.scrollTop = container.scrollHeight;
+      lucide.createIcons();
+    }
+    
+    // SEND CHAT MESSAGE
+    function sendChatMessage() {
+      const input = document.getElementById('chat-user-input');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const ragRes = runLocalRAG(text);
+      injectAnswerInPhoneChat(text, ragRes);
+      
+      input.value = '';
+    }
+    
+    function handleChatEnter(e) {
+      if (e.key === 'Enter') sendChatMessage();
+    }
+    
+    // PRESET SHORTCUT QUERIES FROM HOME
+    function triggerPresetQuery(topic) {
+      let query = "";
+      if (topic === 'chaleco') query = "¿Es obligatorio usar chaleco reflectivo de noche?";
+      else if (topic === 'delivery') query = "¿Cuáles son las normas de delivery y rotulado de placa?";
+      else if (topic === 'licencia') query = "¿Qué licencia de conducir necesito para moto?";
+      else if (topic === 'retencion') query = "¿Cuándo se lleva la moto la grúa en un operativo?";
+      else query = topic;
+      
+      goToScreen('screen-chat');
+      const ragRes = runLocalRAG(query);
+      injectAnswerInPhoneChat(query, ragRes);
+    }
+    
+    // VOICE SPEECH TO TEXT MOCK
+    function startVoiceMock() {
+      const mic = document.getElementById('voice-icon');
+      const input = document.getElementById('chat-user-input');
+      
+      mic.style.color = '#ef4444';
+      input.value = "Escuchando voz...";
+      
+      setTimeout(() => {
+        mic.style.color = 'var(--color-text-muted)';
+        input.value = "¿Es obligatorio el chaleco de noche?";
+      }, 1800);
+    }
+    
+    // RUN VERIFIER
+    function runClaimVerification() {
+      const textInput = document.getElementById('verifier-text-input').value.trim();
+      const resultBox = document.getElementById('verifier-result-box');
+      const badge = document.getElementById('verifier-badge-status');
+      const explanation = document.getElementById('verifier-explanation');
+      const evidence = document.getElementById('verifier-evidence-text');
+      
+      if (!textInput) return;
+      
+      const norm = textInput.toLowerCase();
+      resultBox.style.display = 'block';
+      
+      if (norm.includes('extintor') || norm.includes('fuego') || norm.includes('incendio')) {
+        badge.className = 'badge-status status-contradicha';
+        badge.textContent = 'CONTRADICHA';
+        explanation.textContent = 'FALSO. No es obligatorio que las motocicletas porten un extintor de incendios en Panamá. El Artículo 7 del Reglamento de Tránsito exige extintor únicamente para vehículos de transporte público y de carga comercial. Ningún agente puede multarte ni retener tu moto por no llevar un extintor.';
+        evidence.textContent = '"Todo vehículo a motor que circule por las vías públicas de la República de Panamá debe portar un equipo de seguridad... (la obligatoriedad de extintores aplica a vehículos de transporte público y carga comercial según aclaratorias de la ATTT)."';
+      } else if (norm.includes('chaleco') && (norm.includes('dia') || norm.includes('todo el dia') || norm.includes('mañana') || norm.includes('tarde'))) {
+        badge.className = 'badge-status status-contradicha';
+        badge.textContent = 'CONTRADICHA';
+        explanation.textContent = 'FALSO (para particulares). Según la Resolución OAL N° 973 del 6 de agosto de 2013 de la ATTT, el uso de prendas reflectivas o chalecos es obligatorio únicamente en horario de 6:00 p.m. a 6:00 a.m. Durante el día (de 6:00 a.m. a 6:00 p.m.), los motociclistas particulares NO están obligados por ley a usar chaleco reflectivo. Multar de día por esto es ilegal.';
+        evidence.textContent = '"Establece la obligatoriedad de utilizar prendas de vestir reflectivas o de alta visibilidad en el horario comprendido entre las 6:00 p.m. y las 6:00 a.m. para conductores y acompañantes de motocicletas..."';
+      } else if (norm.includes('chaleco') && (norm.includes('6') || norm.includes('noche') || norm.includes('horario'))) {
+        badge.className = 'badge-status status-parcial';
+        badge.textContent = 'PARCIALMENTE CONFIRMADA';
+        explanation.textContent = 'El uso del chaleco reflectivo (con el número de placa impreso) es obligatorio para los motociclistas durante todo el día (y especialmente de noche para visibilidad) según la Resolución OAL N° 973 de 2013. Sin embargo, no existe una ley o decreto que límite la obligatoriedad exclusivamente a partir de las 6:00 p.m., sino que aplica durante toda la circulación en la vía pública.';
+        evidence.textContent = '"Se establece el uso obligatorio de chaleco reflectivo de color azul, naranja o gris para todos los conductores de motocicletas y sus acompañantes durante su circulación en las vías de la República de Panamá..."';
+      } else if (norm.includes('verde') || norm.includes('limon') || norm.includes('verde limon')) {
+        badge.className = 'badge-status status-confirmada';
+        badge.textContent = 'CONFIRMADA';
+        explanation.textContent = 'La Resolución OAL N° 973 de 2013 prohíbe de forma expresa el uso de chalecos reflectivos verde limón para particulares, siendo un tono exclusivo de las unidades policiales y oficiales de la ATTT.';
+        evidence.textContent = '"Queda expresamente prohibido el uso de chalecos reflectivos de color verde limón, ya que este color es de uso exclusivo para las autoridades de tránsito..."';
+      } else if (norm.includes('retener') || norm.includes('llevar') || norm.includes('grua')) {
+        badge.className = 'badge-status status-confirmada';
+        badge.textContent = 'CONFIRMADA';
+        explanation.textContent = 'El artículo 241 del Reglamento de Tránsito autoriza a las autoridades a remover la motocicleta con grúa si el conductor no porta licencia de conducir, si el vehículo no posee la placa única nacional o las calcomanías correspondientes.';
+        evidence.textContent = '"La Autoridad del Tránsito o la Policía Nacional procederán al retiro del vehículo con grúa y su retención... d. Cuando el vehículo no porte la placa única nacional..."';
+      } else {
+        badge.className = 'badge-status status-duda';
+        badge.textContent = 'NO CONFIRMADA';
+        explanation.textContent = 'No se encontraron regulaciones específicas de tránsito en la base de datos de CascoLegal que puedan confirmar o desmentir esta afirmación exacta en los reglamentos actuales.';
+        evidence.textContent = '"No se encontró una disposición oficial suficiente para confirmar esta afirmación en las fuentes gubernamentales indexadas."';
+      }
+    }
+    
+    // ADMIN FUNCTIONS
+    function approveDocument(rowId, docName) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.style.opacity = '0.5';
+        row.querySelector('td:last-child').innerHTML = '<span style="color: var(--status-vigente); font-weight: 600;">✓ Aprobado</span>';
+        
+        // Agregar al log de auditoría
+        const pendingCount = document.getElementById('admin-pending-count');
+        pendingCount.textContent = '0 Leyes';
+        pendingCount.style.color = 'var(--color-text-muted)';
+      }
+    }
+    
+    function dismissRow(rowId) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.remove();
+        const pendingCount = document.getElementById('admin-pending-count');
+        pendingCount.textContent = '0 Leyes';
+        pendingCount.style.color = 'var(--color-text-muted)';
+      }
+    }
+    
+    // PWA REGISTER SERVICE WORKER
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+          .catch(err => console.error('Error al registrar Service Worker:', err));
+      });
+    }
+
+    // PWA Install Prompt Handler
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('btn-install-app');
+      if (installBtn) {
+        installBtn.style.display = 'flex';
+      }
+    });
+
+    function triggerPWAInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('Usuario aceptó instalar la PWA');
+        }
+        deferredPrompt = null;
+        const installBtn = document.getElementById('btn-install-app');
+        if (installBtn) installBtn.style.display = 'none';
+      });
+    }
+
+    // Offline PDFs download & caching
+    async function startOfflineCacheDownload() {
+      const pdfUrls = [
+        './pdfs/Decreto_Ejecutivo_640_2006.pdf',
+        './pdfs/Decreto_Ejecutivo_19_2022.pdf',
+        './pdfs/Resolucion_OAL_973_2013.pdf'
+      ];
+      
+      const progressBox = document.getElementById('download-progress-box');
+      const progressFill = document.getElementById('download-progress-fill');
+      const percentLbl = document.getElementById('download-percent-lbl');
+      const statusLbl = document.getElementById('download-status-lbl');
+      const dlBtn = document.getElementById('btn-download-offline');
+      
+      progressBox.style.display = 'block';
+      dlBtn.disabled = true;
+      dlBtn.style.opacity = '0.5';
+
+      try {
+        const cache = await caches.open('cascolegal-v1');
+        let totalFiles = pdfUrls.length;
+        let completedFiles = 0;
+
+        for (let i = 0; i < pdfUrls.length; i++) {
+          const url = pdfUrls[i];
+          const filename = url.substring(url.lastIndexOf('/') + 1);
+          statusLbl.textContent = `Descargando: ${filename.substring(0, 15)}...`;
+          
+          // Download using fetch to trace progress
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`Fallo de red al descargar ${url}`);
+
+          // Caching the downloaded blob
+          await cache.put(url, response.clone());
+          
+          completedFiles++;
+          const percent = Math.round((completedFiles / totalFiles) * 100);
+          progressFill.style.width = `${percent}%`;
+          percentLbl.textContent = `${percent}%`;
+        }
+
+        statusLbl.textContent = '¡Descarga offline completada con éxito!';
+        statusLbl.style.color = 'var(--status-vigente)';
+        dlBtn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Guardado Offline';
+        lucide.createIcons(); // refresh icons
+      } catch (err) {
+        console.error(err);
+        statusLbl.textContent = 'Error al descargar base de datos offline.';
+        statusLbl.style.color = 'var(--status-derogado)';
+        dlBtn.disabled = false;
+        dlBtn.style.opacity = '1';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Ignorar carpetas de dependencias y compilación
+node_modules/
+**/node_modules/
+.expo/
+**/dist/
+**/build/
+.next/
+out/
+.vercel
+*.log
+.env
+.env.local
