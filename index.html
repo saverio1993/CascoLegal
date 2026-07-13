@@ -399,7 +399,7 @@
       font-size: 0.9rem;
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 0 0 18px rgba(37, 99, 235, 0.42), inset 0 0 16px rgba(59, 130, 246, 0.08);
       cursor: pointer;
-      margin-bottom: 1.25rem;
+      margin: 1.35rem 0 1.25rem;
       transition: transform 0.2s, background-color 0.2s;
       animation: searchNeonPulse 2.2s ease-in-out infinite;
     }
@@ -412,7 +412,8 @@
     .search-trigger-container::after {
       content: 'Haz una pregunta';
       position: absolute;
-      top: -9px;
+      /* Deja aire visible entre la etiqueta y la caja de búsqueda. */
+      top: -20px;
       left: 18px;
       padding: 0 0.4rem;
       background: var(--phone-bg);
