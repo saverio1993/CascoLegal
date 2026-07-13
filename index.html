@@ -1363,6 +1363,32 @@
               </div>
             </div>
             
+            <div class="modal-backdrop" id="offline-onboarding-modal" style="display: none;">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5>Descarga para usar sin internet</h5>
+                </div>
+                <p style="font-size: 0.75rem; line-height: 1.45; color: var(--color-text-muted); margin-bottom: 1rem;">
+                  ¿Deseas guardar los documentos oficiales de tránsito en este dispositivo? Así podrás consultarlos aunque no tengas conexión.
+                </p>
+                <div class="download-progress-container" id="offline-modal-progress-box" style="display: none; margin-bottom: 1rem;">
+                  <div class="progress-info-row">
+                    <span id="offline-modal-status-lbl" style="font-size: 0.65rem;">Descargando PDFs...</span>
+                    <span id="offline-modal-percent-lbl" style="font-size: 0.65rem; font-weight: 700;">0%</span>
+                  </div>
+                  <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="offline-modal-progress-fill"></div>
+                  </div>
+                </div>
+                <button class="btn-action" id="offline-modal-download-btn" onclick="startOfflineCacheDownload()" style="width: 100%; margin-bottom: 0.5rem;">
+                  <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar archivos PDF
+                </button>
+                <button class="btn-secondary" id="offline-modal-skip-btn" onclick="skipOfflineDownload()" style="width: 100%;">
+                  Omitir descarga
+                </button>
+              </div>
+            </div>
+
             <!-- SCREEN: HOME -->
             <div class="screen" id="screen-home">
               <div class="home-header">
@@ -1445,57 +1471,17 @@
                 </div>
               </div>
 
-              <!-- Promo Cards -->
-              <div class="promo-card" onclick="goToScreen('screen-verifier')">
-                <div style="background-color: rgba(59,130,246,0.15); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
-                  <i data-lucide="check-square" style="width: 18px; height: 18px;"></i>
-                </div>
-                <div class="promo-info">
-                  <h5>Verificador de Afirmaciones</h5>
-                  <p>Comprueba si una supuesta ley de tránsito existe.</p>
-                </div>
-                <i data-lucide="chevron-right" style="width: 16px; height: 16px; margin-left: auto; color: var(--color-text-muted);"></i>
-              </div>
-              
-              <div class="promo-card" style="background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(0,0,0,0.1));" onclick="showAgentScreen('33333333-3333-3333-3333-333333333304')">
-                <div style="background-color: rgba(239,68,68,0.15); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--status-derogado);">
-                  <i data-lucide="alert-octagon" style="width: 18px; height: 18px;"></i>
-                </div>
-                <div class="promo-info">
-                  <h5>Modo Mostrar al Agente</h5>
-                  <p>Ficha rápida de artículo 40-A para operativos.</p>
-                </div>
-                <i data-lucide="chevron-right" style="width: 16px; height: 16px; margin-left: auto; color: var(--color-text-muted);"></i>
-              </div>
-
               <!-- Updates -->
               <div class="home-section-title">
                 Ultimas Leyes Aprobadas
                 <span onclick="goToScreen('screen-library')">Ver todo</span>
               </div>
               
-              <div class="update-carousel">
-                <div class="law-card" onclick="showAgentScreen('33333333-3333-3333-3333-333333333304')">
-                  <div class="law-card-header">
-                    <span>Decreto Ejecutivo 19</span>
-                    <span class="law-badge badge-vigente">Vigente</span>
-                  </div>
-                  <h6>Artículo 40-A: Cajas y Contenedores</h6>
-                  <p>Establece rotulación obligatoria de placa de 7cm en color rojo sobre fondo blanco.</p>
-                </div>
-                <div class="law-card modified" onclick="showAgentScreen('33333333-3333-3333-3333-333333333301')">
-                  <div class="law-card-header">
-                    <span>Decreto Ejecutivo 640</span>
-                    <span class="law-badge badge-modificado">Modificado</span>
-                  </div>
-                  <h6>Artículo 104: Casco y Prendas</h6>
-                  <p>Uso obligatorio de casco de seguridad y aditamentos reflectivos al transitar.</p>
-                </div>
-              </div>
+              <div class="update-carousel" id="latest-laws-list"></div>
               
               <!-- Credits -->
               <div style="text-align: center; font-size: 0.65rem; color: var(--color-text-muted); margin-top: 2rem; margin-bottom: 1.5rem; line-height: 1.4;">
-                Desarrollado y creado por el Grupo del Club de<br><strong style="color: var(--color-secondary);">Panamá Bike Society</strong>
+                Desarrollado y creado por el Grupo del Club de<br><strong style="color: var(--color-secondary);">Panamá Biker Society</strong>
               </div>
             </div>
             
@@ -1642,7 +1628,7 @@
               <i data-lucide="message-square"></i>
               <span>Preguntar</span>
             </div>
-            <div class="nav-item" onclick="goToScreen('screen-verifier')" id="nav-verifier">
+            <div class="nav-item" onclick="goToScreen('screen-verifier')" id="nav-verifier" style="display: none;">
               <i data-lucide="shield-alert"></i>
               <span>Verificar</span>
             </div>
@@ -1666,6 +1652,7 @@
       
       // Cargar lista de biblioteca inicial
       renderLibraryList();
+      renderLatestLaws();
       
       // Verificar si ya se ejecuta como PWA instalada
       if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
@@ -1723,6 +1710,7 @@
       {
         id: '33333333-3333-3333-3333-333333333301',
         documentNumber: '640',
+        publishedAt: '2006-12-27',
         documentTitle: 'Reglamento de Tránsito Vehicular',
         documentType: 'Decreto Ejecutivo',
         articleNumber: '104',
@@ -1736,6 +1724,7 @@
       {
         id: '33333333-3333-3333-3333-333333333302',
         documentNumber: '640',
+        publishedAt: '2006-12-27',
         documentTitle: 'Reglamento de Tránsito Vehicular',
         documentType: 'Decreto Ejecutivo',
         articleNumber: '132',
@@ -1749,6 +1738,7 @@
       {
         id: '33333333-3333-3333-3333-333333333303',
         documentNumber: '640',
+        publishedAt: '2006-12-27',
         documentTitle: 'Reglamento de Tránsito Vehicular',
         documentType: 'Decreto Ejecutivo',
         articleNumber: '241',
@@ -1762,6 +1752,7 @@
       {
         id: '33333333-3333-3333-3333-333333333304',
         documentNumber: '19',
+        publishedAt: '2022-01-01',
         documentTitle: 'Decreto Delivery de Motos',
         documentType: 'Decreto Ejecutivo',
         articleNumber: '40-A',
@@ -1775,6 +1766,7 @@
       {
         id: '33333333-3333-3333-3333-333333333305',
         documentNumber: '973',
+        publishedAt: '2013-08-06',
         documentTitle: 'Medidas de Seguridad Vial Motos (OAL 973)',
         documentType: 'Resolución OAL',
         articleNumber: 'Primero',
@@ -1806,14 +1798,34 @@
           <h6>Artículo ${art.articleNumber}: ${art.title}</h6>
           <p>${art.content}</p>
           <div style="margin-top: 6px; display: flex; justify-content: flex-end;">
-            <button class="btn-secondary" style="padding: 0.15rem 0.4rem; font-size: 0.6rem; border-radius: 4px;" onclick="showAgentScreen('${art.id}')">
-              <i data-lucide="eye" style="width: 10px; height: 10px;"></i> Modo Agente
-            </button>
+            <span style="font-size: 0.6rem; color: var(--color-text-muted);">Consulta disponible en Preguntar</span>
           </div>
         `;
         container.appendChild(div);
       });
       lucide.createIcons();
+    }
+
+    // Muestra las normas más recientes disponibles en el catálogo legal local.
+    function renderLatestLaws() {
+      const container = document.getElementById('latest-laws-list');
+      if (!container) return;
+
+      const latest = [...SIMULATOR_DB]
+        .filter((art, index, all) => all.findIndex(item => item.documentNumber === art.documentNumber) === index)
+        .sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || '')));
+
+      container.innerHTML = latest.slice(0, 3).map(art => `
+        <div class="law-card">
+          <div class="law-card-header">
+            <span>${escapeHTML(art.documentType)} N° ${escapeHTML(art.documentNumber)}</span>
+            <span class="law-badge badge-vigente">Vigente</span>
+          </div>
+          <h6>Artículo ${escapeHTML(art.articleNumber)}: ${escapeHTML(art.title)}</h6>
+          <p>${escapeHTML(art.content)}</p>
+          <small style="display:block; margin-top: 0.5rem; color: var(--color-text-muted);">Actualizado: ${escapeHTML(art.publishedAt || 'fecha no indicada')}</small>
+        </div>
+      `).join('');
     }
     
     // MODO MOSTRAR AL AGENTE TRANSITO ACTIONS
@@ -1886,16 +1898,22 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     }
 
     function enterApp() {
-      goToScreen('screen-home');
-      if (!localStorage.getItem('cascolegal-offline-prompt-seen')) {
-        localStorage.setItem('cascolegal-offline-prompt-seen', '1');
-        const banner = document.getElementById('offline-first-banner');
-        if (banner) {
-          banner.style.display = 'flex';
-          setTimeout(() => banner.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+      if (!localStorage.getItem('cascolegal-onboarding-complete')) {
+        const modal = document.getElementById('offline-onboarding-modal');
+        if (modal) {
+          modal.style.display = 'flex';
           lucide.createIcons();
         }
+        return;
       }
+      goToScreen('screen-home');
+    }
+
+    function skipOfflineDownload() {
+      localStorage.setItem('cascolegal-onboarding-complete', '1');
+      const modal = document.getElementById('offline-onboarding-modal');
+      if (modal) modal.style.display = 'none';
+      goToScreen('screen-home');
     }
 
     function saveChatState() {
@@ -2203,15 +2221,14 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
       ];
       
-      const progressBox = document.getElementById('download-progress-box');
-      const progressFill = document.getElementById('download-progress-fill');
-      const percentLbl = document.getElementById('download-percent-lbl');
-      const statusLbl = document.getElementById('download-status-lbl');
-      const dlBtn = document.getElementById('btn-download-offline');
+      const progressBoxes = [document.getElementById('download-progress-box'), document.getElementById('offline-modal-progress-box')].filter(Boolean);
+      const progressFills = [document.getElementById('download-progress-fill'), document.getElementById('offline-modal-progress-fill')].filter(Boolean);
+      const percentLbls = [document.getElementById('download-percent-lbl'), document.getElementById('offline-modal-percent-lbl')].filter(Boolean);
+      const statusLbls = [document.getElementById('download-status-lbl'), document.getElementById('offline-modal-status-lbl')].filter(Boolean);
+      const downloadBtns = [document.getElementById('btn-download-offline'), document.getElementById('offline-modal-download-btn')].filter(Boolean);
       
-      progressBox.style.display = 'block';
-      dlBtn.disabled = true;
-      dlBtn.style.opacity = '0.5';
+      progressBoxes.forEach(element => element.style.display = 'block');
+      downloadBtns.forEach(element => { element.disabled = true; element.style.opacity = '0.5'; });
 
       try {
         const cache = await caches.open('cascolegal-v6');
@@ -2221,7 +2238,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         for (let i = 0; i < pdfUrls.length; i++) {
           const url = pdfUrls[i];
           const filename = url.substring(url.lastIndexOf('/') + 1);
-          statusLbl.textContent = `Descargando: ${filename.substring(0, 15)}...`;
+          statusLbls.forEach(element => element.textContent = `Descargando: ${filename.substring(0, 15)}...`);
           
           // Download using fetch to trace progress
           const response = await fetch(url);
@@ -2232,22 +2249,23 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           
           completedFiles++;
           const percent = Math.round((completedFiles / totalFiles) * 100);
-          progressFill.style.width = `${percent}%`;
-          percentLbl.textContent = `${percent}%`;
+          progressFills.forEach(element => element.style.width = `${percent}%`);
+          percentLbls.forEach(element => element.textContent = `${percent}%`);
         }
 
-        statusLbl.textContent = '¡Descarga offline completada con éxito!';
-        statusLbl.style.color = 'var(--status-vigente)';
+        statusLbls.forEach(element => { element.textContent = '¡Descarga offline completada con éxito!'; element.style.color = 'var(--status-vigente)'; });
         const firstBanner = document.getElementById('offline-first-banner');
         if (firstBanner) firstBanner.style.display = 'none';
-        dlBtn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Guardado Offline';
+        downloadBtns.forEach(element => element.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Guardado Offline');
+        localStorage.setItem('cascolegal-onboarding-complete', '1');
+        const modal = document.getElementById('offline-onboarding-modal');
+        if (modal) modal.style.display = 'none';
+        goToScreen('screen-home');
         lucide.createIcons(); // refresh icons
       } catch (err) {
         console.error(err);
-        statusLbl.textContent = 'Error al descargar base de datos offline.';
-        statusLbl.style.color = 'var(--status-derogado)';
-        dlBtn.disabled = false;
-        dlBtn.style.opacity = '1';
+        statusLbls.forEach(element => { element.textContent = 'Error al descargar los PDFs. Puedes omitir y volver a intentarlo luego.'; element.style.color = 'var(--status-derogado)'; });
+        downloadBtns.forEach(element => { element.disabled = false; element.style.opacity = '1'; });
       }
     }
   </script>
