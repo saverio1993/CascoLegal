@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cascolegal-v10';
+const CACHE_NAME = 'cascolegal-v11';
 const STATIC_ASSETS = [
   './',
   './index.html',
