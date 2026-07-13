@@ -1254,6 +1254,48 @@
         display: none !important;
       }
     }
+
+    /* AI Settings Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+    
+    .modal-content {
+      background-color: var(--phone-screen-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 360px;
+      padding: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      animation: fadeIn 0.2s ease-out;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+    
+    .modal-header h5 {
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -1421,6 +1463,9 @@
                   <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
                 </button>
                 <h4>Consulta Inteligente (RAG)</h4>
+                <button class="btn-settings" onclick="toggleAISettingsModal()" style="background: none; border: none; color: #fff; cursor: pointer; margin-left: auto; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                  <i data-lucide="settings" style="width: 18px; height: 18px;"></i>
+                </button>
               </div>
               
               <div class="disclaimer-box">
@@ -1441,7 +1486,7 @@
               </div>
               
               <div class="chat-input-area">
-                <button class="btn-icon-voice" onclick="startVoiceMock()">
+                <button class="btn-icon-voice" onclick="startVoiceRecognition()">
                   <i data-lucide="mic" id="voice-icon" style="width: 16px; height: 16px;"></i>
                 </button>
                 <input type="text" class="chat-input" id="chat-user-input" placeholder="Pregunta sobre leyes de moto en Panamá..." onkeypress="handleChatEnter(event)">
@@ -1569,6 +1614,29 @@
             </div>
           </div>
         </div>
+
+  <!-- Modal de Configuración de IA -->
+  <div class="modal-backdrop" id="ai-settings-modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Configuración de IA (Gemini)</h5>
+        <button onclick="toggleAISettingsModal()" style="background: none; border: none; color: var(--color-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+      </div>
+      <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 1rem; line-height: 1.4;">
+        Para usar el chat inteligente de forma gratuita e independiente, ingresa tu API Key de Google Gemini. Tus datos se guardan de forma local y segura en tu navegador.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem;">
+        <label style="font-size: 0.7rem; font-weight: 700; color: #fff;">Gemini API Key:</label>
+        <input type="password" id="gemini-api-key-input" class="tester-input" placeholder="Pega tu API Key de Google aquí..." style="padding: 0.5rem; font-size: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: var(--phone-card-bg); color: #fff;">
+      </div>
+      <a href="https://aistudio.google.com/" target="_blank" style="font-size: 0.7rem; color: var(--color-primary); text-decoration: underline; display: block; margin-bottom: 1.25rem;">
+        ¿Cómo obtener una API Key gratis en 1 clic?
+      </a>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn-action" style="flex: 1; padding: 0.5rem; font-size: 0.75rem;" onclick="saveGeminiAPIKey()">Guardar Clave</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // JS STATE MANAGEMENT
@@ -1793,38 +1861,68 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     }
     
     // INJECT ANSWER IN PHONE CHAT
-    function injectAnswerInPhoneChat(userQuery, ragResult) {
+    async function injectAnswerInPhoneChat(userQuery, ragResult) {
       const container = document.getElementById('chat-messages-container');
       
-      // User message
+      // Mensaje de usuario
       const userMsgDiv = document.createElement('div');
       userMsgDiv.className = 'chat-msg user';
       userMsgDiv.textContent = userQuery;
       container.appendChild(userMsgDiv);
+      container.scrollTop = container.scrollHeight;
       
-      // Assistant RAG response builder
-      const asstMsgDiv = document.createElement('div');
-      asstMsgDiv.className = 'chat-msg assistant';
+      // Burbuja de carga del asistente
+      const loadingMsgDiv = document.createElement('div');
+      loadingMsgDiv.className = 'chat-msg assistant';
+      loadingMsgDiv.innerHTML = '<div style="display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--color-text-muted);"><span style="animation: pulse 1s infinite;">Procesando consulta con IA...</span></div>';
+      container.appendChild(loadingMsgDiv);
+      container.scrollTop = container.scrollHeight;
+      
+      // Consultar Gemini si la clave está guardada
+      let aiResponse = await callGeminiAI(userQuery, ragResult);
       
       let answerText = "";
-      if (ragResult.matches.length === 0) {
-        answerText = "De acuerdo con los documentos oficiales cargados, no se encontró una disposición oficial suficiente para confirmar esta afirmación.";
+      let showKeyPrompt = false;
+      
+      if (aiResponse) {
+        answerText = aiResponse;
       } else {
-        const topMatch = ragResult.matches[0];
-        if (userQuery.toLowerCase().includes('chaleco')) {
-          answerText = "En Panamá, es obligatorio usar chaleco reflectivo con tu número de placa de moto impreso en la espalda (colores: azul, naranja o gris). Los chalecos verde limón están prohibidos porque son exclusivos de la policía de tránsito.";
-        } else if (userQuery.toLowerCase().includes('delivery') || userQuery.toLowerCase().includes('caja')) {
-          answerText = "Sí, según el Decreto 19 de 2022, las motos de reparto deben rotular la placa visible en la parte trasera de la mochila o caja de carga (letras rojas, fondo blanco reflectivo, tipografía Arial de 7 cm).";
-        } else if (userQuery.toLowerCase().includes('retencion') || userQuery.toLowerCase().includes('grua')) {
-          answerText = "Sí, la grúa puede remover tu moto si manejas sin licencia de conducir, si no tienes placa única de circulación o calcomanía vigente, o bajo los efectos del alcohol (según Artículo 241).";
+        // Fallback local RAG
+        if (ragResult.matches.length === 0) {
+          answerText = "De acuerdo con los documentos oficiales cargados, no se encontró una disposición oficial suficiente para confirmar esta afirmación.";
         } else {
-          answerText = `Según el Artículo ${topMatch.articleNumber} del ${topMatch.documentType} N° ${topMatch.documentNumber}, se establece lo siguiente: ${topMatch.content}`;
+          const topMatch = ragResult.matches[0];
+          if (userQuery.toLowerCase().includes('chaleco')) {
+            answerText = "En Panamá, es obligatorio usar chaleco reflectivo con tu número de placa de moto impreso en la espalda (horario: 6:00 p.m. a 6:00 a.m. para particulares). Los chalecos verde limón están prohibidos porque son exclusivos de la policía de tránsito.";
+          } else if (userQuery.toLowerCase().includes('delivery') || userQuery.toLowerCase().includes('caja')) {
+            answerText = "Sí, según el Decreto 19 de 2022, las motos de reparto deben rotular la placa visible en la parte trasera de la mochila o caja de carga (letras rojas, fondo blanco reflectivo, tipografía Arial de 7 cm).";
+          } else if (userQuery.toLowerCase().includes('retencion') || userQuery.toLowerCase().includes('grua')) {
+            answerText = "Sí, la grúa puede remover tu moto si manejas sin licencia de conducir, si no tienes placa única de circulación o calcomanía vigente, o bajo los efectos del alcohol (según Artículo 241).";
+          } else {
+            answerText = `Según el Artículo ${topMatch.articleNumber} del ${topMatch.documentType} N° ${topMatch.documentNumber}, se establece lo siguiente: ${topMatch.content}`;
+          }
+        }
+        
+        // Si no hay API key de Gemini configurada, sugerir su ingreso
+        if (!localStorage.getItem('gemini_api_key')) {
+          showKeyPrompt = true;
         }
       }
       
-      asstMsgDiv.innerHTML = `
-        <p><strong>Respuesta Breve:</strong></p>
-        <p style="margin-bottom: 8px;">${answerText}</p>
+      // Rellenar la respuesta final
+      loadingMsgDiv.innerHTML = `
+        <p><strong>Respuesta de CascoLegal:</strong></p>
+        <p style="margin-bottom: 8px; line-height: 1.4; white-space: pre-line;">${answerText}</p>
+        
+        ${showKeyPrompt ? `
+          <div style="background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(0,0,0,0.3)); border: 1px dashed rgba(245,158,11,0.3); border-radius: 10px; padding: 0.6rem; margin: 0.75rem 0; font-size: 0.7rem; color: var(--color-secondary); line-height: 1.3;">
+            <i data-lucide="key" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+            ¿Deseas activar respuestas inteligentes avanzadas por IA? 
+            <a href="#" onclick="toggleAISettingsModal(); return false;" style="text-decoration: underline; color: #fff; font-weight: 700;">
+               Configura tu Gemini API Key gratis aquí.
+            </a>
+          </div>
+        ` : ''}
         
         ${ragResult.matches.map(m => `
           <div class="source-citation-card">
@@ -1840,7 +1938,6 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         `).join('')}
       `;
       
-      container.appendChild(asstMsgDiv);
       container.scrollTop = container.scrollHeight;
       lucide.createIcons();
     }
@@ -1994,6 +2091,136 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         const splashBtn = document.getElementById('splash-btn-install');
         if (splashBtn) splashBtn.style.display = 'none';
       });
+    }
+
+    // AI SETTINGS CONTROL
+    function toggleAISettingsModal() {
+      const modal = document.getElementById('ai-settings-modal');
+      const input = document.getElementById('gemini-api-key-input');
+      
+      if (modal.style.display === 'none' || !modal.style.display) {
+        modal.style.display = 'flex';
+        input.value = localStorage.getItem('gemini_api_key') || '';
+      } else {
+        modal.style.display = 'none';
+      }
+    }
+
+    function saveGeminiAPIKey() {
+      const input = document.getElementById('gemini-api-key-input');
+      const key = input.value.trim();
+      
+      if (key) {
+        localStorage.setItem('gemini_api_key', key);
+        alert('API Key de Gemini guardada de forma segura en tu navegador.');
+      } else {
+        localStorage.removeItem('gemini_api_key');
+        alert('API Key eliminada. El chat funcionará con la base de datos de RAG local.');
+      }
+      
+      toggleAISettingsModal();
+      
+      // Intentar refrescar la vista de chat si está activa
+      if (currentScreen === 'screen-chat') {
+        const container = document.getElementById('chat-messages-container');
+        // Quitar la sugerencia vieja si existía para recargarla limpia
+        goToScreen('screen-chat');
+      }
+    }
+
+    // NATIVE VOICE RECOGNITION (Web Speech API)
+    let speechRecognitionInstance;
+    function startVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("La transcripción por voz no es soportada en este navegador. Por favor use Google Chrome o Safari.");
+        return;
+      }
+
+      const micIcon = document.getElementById('voice-icon');
+      const input = document.getElementById('chat-user-input');
+
+      if (speechRecognitionInstance) {
+        speechRecognitionInstance.stop();
+        speechRecognitionInstance = null;
+        return;
+      }
+
+      speechRecognitionInstance = new SpeechRecognition();
+      speechRecognitionInstance.lang = 'es-PA'; // Español de Panamá
+      speechRecognitionInstance.interimResults = false;
+      speechRecognitionInstance.maxAlternatives = 1;
+
+      speechRecognitionInstance.onstart = () => {
+        micIcon.style.color = '#ef4444'; // Indicador de grabación
+        input.value = "Escuchando voz...";
+        input.disabled = true;
+      };
+
+      speechRecognitionInstance.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        input.value = text;
+      };
+
+      speechRecognitionInstance.onerror = (err) => {
+        console.error('Speech recognition error:', err.error);
+        micIcon.style.color = 'var(--color-text-muted)';
+        input.value = "";
+      };
+
+      speechRecognitionInstance.onend = () => {
+        micIcon.style.color = 'var(--color-text-muted)';
+        input.disabled = false;
+        if (input.value === "Escuchando voz...") {
+          input.value = "";
+        }
+        speechRecognitionInstance = null;
+      };
+
+      speechRecognitionInstance.start();
+    }
+
+    // CALL GOOGLE GEMINI AI API (Free Tier)
+    async function callGeminiAI(userQuery, ragResult) {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      if (!apiKey) return null;
+
+      const prompt = `Eres CascoLegal, el asistente de inteligencia artificial oficial del Club Panamá Bike Society para motociclistas en Panamá.
+Tu objetivo es dar una respuesta resumida, clara y comprensible al usuario en español, fundamentada estrictamente en el contexto de las leyes de tránsito provistas a continuación.
+No inventes leyes, multas ni regulaciones. Si el contexto oficial no contiene la respuesta a la pregunta del usuario, di textualmente: "No encontré una disposición oficial en la base de datos de CascoLegal que regule esto."
+Cita siempre el Decreto/Resolución oficial y el Artículo correspondiente en tu respuesta.
+
+Contexto oficial indexado:
+${ragResult.matches.map(m => `[Documento: ${m.documentType} N° ${m.documentNumber}, Artículo: ${m.articleNumber}]: ${m.content}`).join('\n')}
+
+Pregunta del motociclista: ${userQuery}`;
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }]
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
+          return data.candidates[0].content.parts[0].text;
+        }
+        throw new Error('Respuesta de Gemini vacía');
+      } catch (err) {
+        console.error('Error al llamar a Gemini API:', err);
+        return null;
+      }
     }
 
     // Offline PDFs download & caching
