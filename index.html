@@ -1478,7 +1478,7 @@
                   <h5>Descarga para usar sin internet</h5>
                 </div>
                 <p style="font-size: 0.75rem; line-height: 1.45; color: var(--color-text-muted); margin-bottom: 1rem;">
-                  ¿Deseas guardar los documentos oficiales de tránsito en este dispositivo? Así podrás consultarlos aunque no tengas conexión.
+                  Instala CascoLegal y descarga los documentos oficiales de tránsito en este dispositivo. Así podrás consultarlos aunque no tengas conexión.
                 </p>
                 <div class="download-progress-container" id="offline-modal-progress-box" style="display: none; margin-bottom: 1rem;">
                   <div class="progress-info-row">
@@ -1489,11 +1489,8 @@
                     <div class="progress-bar-fill" id="offline-modal-progress-fill"></div>
                   </div>
                 </div>
-                <button class="btn-action" id="offline-modal-download-btn" onclick="startOfflineCacheDownload()" style="width: 100%; margin-bottom: 0.5rem;">
-                  <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar archivos PDF
-                </button>
-                <button class="btn-secondary" id="offline-modal-skip-btn" onclick="skipOfflineDownload()" style="width: 100%;">
-                  Omitir descarga
+                <button class="btn-action" id="offline-modal-download-btn" onclick="startInstallAndOfflineDownload()" style="width: 100%;">
+                  <i data-lucide="download-cloud" style="width: 14px; height: 14px;"></i> Instalar aplicación y descargar PDFs offline
                 </button>
               </div>
             </div>
@@ -2339,6 +2336,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
 
     // PWA Install Prompt Handler
     let deferredPrompt;
+    let offlineDownloadInProgress = false;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -2377,6 +2375,23 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       });
       if (typeof startOfflineCacheDownload === 'function') startOfflineCacheDownload();
     });
+
+    async function startInstallAndOfflineDownload() {
+      const button = document.getElementById('offline-modal-download-btn');
+      if (button) {
+        button.disabled = true;
+        button.style.opacity = '0.65';
+      }
+
+      if (deferredPrompt) {
+        const installEvent = deferredPrompt;
+        deferredPrompt = null;
+        installEvent.prompt();
+        await installEvent.userChoice;
+      }
+
+      await startOfflineCacheDownload();
+    }
 
     // NATIVE VOICE RECOGNITION (Web Speech API)
     let speechRecognitionInstance;
@@ -2461,6 +2476,8 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
 
     // Offline PDFs download & caching
     async function startOfflineCacheDownload() {
+      if (offlineDownloadInProgress) return;
+      offlineDownloadInProgress = true;
       const pdfUrls = [
         '/pdfs/Decreto_Ejecutivo_640_2006.pdf',
         '/pdfs/Decreto_Ejecutivo_19_2022.pdf',
@@ -2513,8 +2530,10 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         refreshOfflinePdfCard();
       } catch (err) {
         console.error(err);
-        statusLbls.forEach(element => { element.textContent = 'Error al descargar los PDFs. Puedes omitir y volver a intentarlo luego.'; element.style.color = 'var(--status-derogado)'; });
+        statusLbls.forEach(element => { element.textContent = 'No se pudieron descargar los PDFs. Comprueba tu conexión e inténtalo nuevamente.'; element.style.color = 'var(--status-derogado)'; });
         downloadBtns.forEach(element => { element.disabled = false; element.style.opacity = '1'; });
+      } finally {
+        offlineDownloadInProgress = false;
       }
     }
   </script>
