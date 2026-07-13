@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1A365D">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/assets/panama-flag.png">
   <title>CascoLegal — Portal de Desarrollo y Simulador de Sistemas</title>
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1572,7 +1575,7 @@
                     <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar PDFs Offline
                   </button>
                   <button class="btn-pwa-action pwa-install-btn" id="btn-install-app" style="display: flex;" onclick="triggerPWAInstall()">
-                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i> Agregar acceso directo
+                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i> Instalar aplicación
                   </button>
                 </div>
               </div>
@@ -2325,6 +2328,15 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         if (splashBtn) splashBtn.style.display = 'none';
       });
     }
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const installedLbl = document.getElementById('splash-pwa-installed-lbl');
+      if (installedLbl) installedLbl.style.display = 'block';
+      document.querySelectorAll('.pwa-install-btn').forEach(button => {
+        button.style.display = 'none';
+      });
+    });
 
     // NATIVE VOICE RECOGNITION (Web Speech API)
     let speechRecognitionInstance;

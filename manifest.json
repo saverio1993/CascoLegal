@@ -2,21 +2,23 @@
   "name": "CascoLegal Panamá",
   "short_name": "CascoLegal",
   "description": "Consulta legal vial offline para motociclistas en Panamá",
-  "start_url": "./index.html",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0F172A",
   "theme_color": "#1A365D",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/192/000000/helmet.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/assets/bikers-society-logo.jpg",
+      "sizes": "1088x1088",
+      "type": "image/jpeg"
     },
     {
-      "src": "https://img.icons8.com/color/512/000000/helmet.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/assets/bikers-society-logo.jpg",
+      "sizes": "1088x1088",
+      "type": "image/jpeg"
     }
   ]
 }
