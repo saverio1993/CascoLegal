@@ -1790,6 +1790,13 @@
       lucide.createIcons();
       updateTime();
       setInterval(updateTime, 60000);
+
+      // Cada apertura empieza en una pantalla limpia; nunca se restaura el visor PDF anterior.
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      const startScreen = localStorage.getItem('cascolegal-onboarding-complete') || isStandalone
+        ? 'screen-home'
+        : 'screen-splash';
+      goToScreen(startScreen);
       
       // Cargar lista de biblioteca inicial
       renderLibraryList();
