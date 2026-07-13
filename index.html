@@ -2416,7 +2416,7 @@
     // Así una actualización de CascoLegal no elimina los PDF que el conductor ya descargó.
     const OFFLINE_PDF_CACHE_NAME = 'cascolegal-pdfs-v7';
     const LEGACY_OFFLINE_PDF_CACHE_NAMES = ['cascolegal-v6'];
-    const OFFLINE_PDF_RELEASE = '2026-07-13-pdf-fix';
+    const OFFLINE_PDF_RELEASE = '2026-07-13-ios-legacy-viewer';
 
     function hasPdfSignature(bytes) {
       return bytes && bytes.length >= 5 &&
@@ -2660,6 +2660,7 @@
 
     let pdfViewerReturnScreen = 'screen-chat';
     let pdfJsModulePromise = null;
+    let legacyPdfJsModulePromise = null;
     let pdfDocumentInstance = null;
     let pdfCurrentPage = 1;
     let pdfZoom = 1;
@@ -2689,12 +2690,44 @@
       }
     }
 
+    function loadLegacyPdfJsModule() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (!legacyPdfJsModulePromise) {
+        legacyPdfJsModulePromise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          // Sin parámetro de versión: coincide exactamente con el recurso
+          // precargado por el service worker para funcionar sin señal.
+          script.src = '/assets/pdfjs-legacy/pdf.min.js';
+          script.async = true;
+          script.onload = () => {
+            const pdfjs = window.pdfjsLib;
+            if (!pdfjs) {
+              legacyPdfJsModulePromise = null;
+              reject(new Error('No se pudo cargar el visor compatible para iPhone.'));
+              return;
+            }
+            pdfjs.GlobalWorkerOptions.workerSrc = '/assets/pdfjs-legacy/pdf.worker.min.js';
+            resolve(pdfjs);
+          };
+          script.onerror = () => {
+            legacyPdfJsModulePromise = null;
+            reject(new Error('No se pudo cargar el visor compatible para iPhone.'));
+          };
+          document.head.appendChild(script);
+        });
+      }
+      return legacyPdfJsModulePromise;
+    }
+
     function loadPdfJsModule() {
+      // PDF.js 5 falla en algunos Safari instalados como PWA. Para iPhone se
+      // usa la compilación clásica, que procesa el mismo ArrayBuffer offline.
+      if (isIOSDevice()) return loadLegacyPdfJsModule();
       if (!pdfJsModulePromise) {
         ensurePdfJsCompatibility();
-        pdfJsModulePromise = import(`/assets/pdfjs/pdf.mjs?release=${OFFLINE_PDF_RELEASE}`)
+        pdfJsModulePromise = import('/assets/pdfjs/pdf.mjs')
           .then(pdfjs => {
-            pdfjs.GlobalWorkerOptions.workerSrc = `/assets/pdfjs/pdf.worker.mjs?release=${OFFLINE_PDF_RELEASE}`;
+            pdfjs.GlobalWorkerOptions.workerSrc = '/assets/pdfjs/pdf.worker.mjs';
             return pdfjs;
           })
           .catch(error => {

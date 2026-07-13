@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cascolegal-v14';
+const CACHE_NAME = 'cascolegal-v15';
 const LEGACY_PDF_CACHE_NAME = 'cascolegal-v6';
 const PDF_CACHE_PREFIX = 'cascolegal-pdfs-';
 const STATIC_ASSETS = [
@@ -9,7 +9,11 @@ const STATIC_ASSETS = [
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/pdfjs/pdf.mjs',
-  './assets/pdfjs/pdf.worker.mjs'
+  './assets/pdfjs/pdf.worker.mjs',
+  // Visor clásico para Safari/iPhone, compatible con versiones de iOS donde
+  // PDF.js moderno no puede iniciarse dentro de una PWA instalada.
+  './assets/pdfjs-legacy/pdf.min.js',
+  './assets/pdfjs-legacy/pdf.worker.min.js'
 ];
 
 // Instalación: Guardar recursos estáticos básicos
