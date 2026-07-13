@@ -652,6 +652,23 @@
       gap: 2px;
     }
 
+    .pdf-viewer-frame {
+      width: 100%;
+      height: 54vh;
+      min-height: 320px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .pdf-highlight-box {
+      margin: 0.75rem 0;
+      padding: 0.75rem;
+      border-left: 3px solid var(--color-secondary);
+      border-radius: 8px;
+      background: rgba(245, 158, 11, 0.1);
+    }
+
     .chat-input-area {
       display: flex;
       gap: 0.5rem;
@@ -1519,6 +1536,24 @@
                 </button>
               </div>
             </div>
+
+            <!-- SCREEN: PDF VIEWER -->
+            <div class="screen" id="screen-pdf-viewer">
+              <div class="screen-header">
+                <button class="btn-back" onclick="goToScreen('screen-chat')">
+                  <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <h4 id="pdf-viewer-heading">Gaceta Oficial</h4>
+              </div>
+              <div class="pdf-highlight-box">
+                <strong id="pdf-viewer-article">Artículo citado</strong>
+                <p id="pdf-viewer-highlight" style="font-size: 0.7rem; line-height: 1.45; margin-top: 0.35rem;"></p>
+              </div>
+              <iframe class="pdf-viewer-frame" id="pdf-viewer-frame" title="Documento PDF oficial"></iframe>
+              <a class="citation-link" id="pdf-viewer-external-link" target="_blank" rel="noopener noreferrer" style="margin-top: 0.6rem;">
+                <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> Abrir PDF en otra pestaña
+              </a>
+            </div>
             
             <!-- SCREEN: VERIFICADOR DE AFIRMACIONES -->
             <div class="screen" id="screen-verifier">
@@ -1839,6 +1874,19 @@
       
       goToScreen('screen-agent-mode');
     }
+
+    function openPdfViewer(articleId) {
+      const art = SIMULATOR_DB.find(item => item.id === articleId);
+      if (!art) return;
+
+      document.getElementById('pdf-viewer-heading').textContent = `${art.documentType} N° ${art.documentNumber}`;
+      document.getElementById('pdf-viewer-article').textContent = `Artículo ${art.articleNumber}: ${art.title}`;
+      document.getElementById('pdf-viewer-highlight').textContent = art.content;
+      document.getElementById('pdf-viewer-frame').setAttribute('src', art.gazetteUrl);
+      document.getElementById('pdf-viewer-external-link').setAttribute('href', art.gazetteUrl);
+      goToScreen('screen-pdf-viewer');
+      lucide.createIcons();
+    }
     
     // MOCK RAG ENGINE IN FRONTEND
     function runLocalRAG(queryText) {
@@ -1971,8 +2019,8 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
               <span class="law-badge badge-vigente" style="font-size: 0.55rem; padding: 0 4px;">Vigente</span>
             </div>
             <p style="font-size: 0.65rem; color: #cbd5e1; margin-bottom: 4px;">"${escapeHTML(m.content)}"</p>
-            <a href="${escapeHTML(m.gazetteUrl)}" class="citation-link" target="_blank" rel="noopener noreferrer">
-              <i data-lucide="external-link" style="width: 10px; height: 10px;"></i> Gaceta Oficial N° ${m.gazetteNumber}
+            <a href="#" class="citation-link" onclick="event.preventDefault(); openPdfViewer('${escapeHTML(m.id)}')">
+              <i data-lucide="file-text" style="width: 10px; height: 10px;"></i> Gaceta Oficial N° ${m.gazetteNumber}
             </a>
           </div>
         `).join('')}
