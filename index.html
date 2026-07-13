@@ -375,22 +375,46 @@
     }
 
     .search-trigger-container {
-      background-color: var(--phone-card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 0.75rem 1rem;
+      position: relative;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(21, 30, 51, 0.96));
+      border: 1px solid rgba(59, 130, 246, 0.85);
+      border-radius: 18px;
+      padding: 1.1rem 1.15rem;
+      min-height: 62px;
       display: flex;
       align-items: center;
       gap: 0.75rem;
       color: var(--color-text-muted);
-      font-size: 0.8rem;
+      font-size: 0.9rem;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 0 0 18px rgba(37, 99, 235, 0.42), inset 0 0 16px rgba(59, 130, 246, 0.08);
       cursor: pointer;
       margin-bottom: 1.25rem;
-      transition: background-color 0.2s;
+      transition: transform 0.2s, background-color 0.2s;
+      animation: searchNeonPulse 2.2s ease-in-out infinite;
     }
 
     .search-trigger-container:hover {
-      background-color: rgba(255,255,255,0.02);
+      background-color: rgba(59,130,246,0.16);
+      transform: translateY(-1px);
+    }
+
+    .search-trigger-container::after {
+      content: 'Haz una pregunta';
+      position: absolute;
+      top: -9px;
+      left: 18px;
+      padding: 0 0.4rem;
+      background: var(--phone-bg);
+      color: #60a5fa;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    @keyframes searchNeonPulse {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 0 0 12px rgba(37, 99, 235, 0.28), inset 0 0 12px rgba(59, 130, 246, 0.06); }
+      50% { box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.34), 0 0 25px rgba(37, 99, 235, 0.72), inset 0 0 20px rgba(59, 130, 246, 0.14); }
     }
 
     .grid-shortcuts {
@@ -1483,8 +1507,8 @@
               <!-- Search Trigger Box -->
               <div class="search-trigger-container" onclick="goToScreen('screen-chat')">
                 <i data-lucide="search" style="width: 16px; height: 16px; color: var(--color-primary);"></i>
-                <span>¿Es obligatorio usar chaleco...?</span>
-                <i data-lucide="mic" style="width: 16px; height: 16px; margin-left: auto;"></i>
+                  <span>Escribe aquí tu pregunta sobre leyes y tránsito</span>
+                <i data-lucide="mic" style="width: 20px; height: 20px; margin-left: auto;"></i>
               </div>
               
               <!-- Grid Shortcuts -->
@@ -1547,8 +1571,8 @@
                   <button class="btn-pwa-action" id="btn-download-offline" onclick="startOfflineCacheDownload()">
                     <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar PDFs Offline
                   </button>
-                  <button class="btn-pwa-action pwa-install-btn" id="btn-install-app" style="display: none;" onclick="triggerPWAInstall()">
-                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i> Instalar App
+                  <button class="btn-pwa-action pwa-install-btn" id="btn-install-app" style="display: flex;" onclick="triggerPWAInstall()">
+                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i> Agregar acceso directo
                   </button>
                 </div>
               </div>
@@ -2283,7 +2307,10 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     });
 
     function triggerPWAInstall() {
-      if (!deferredPrompt) return;
+      if (!deferredPrompt) {
+        alert('Para agregar CascoLegal al móvil:\n\nAndroid: abre el menú ⋮ y elige “Instalar aplicación” o “Agregar a pantalla de inicio”.\n\niPhone: pulsa Compartir y selecciona “Añadir a pantalla de inicio”.');
+        return;
+      }
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
