@@ -1233,12 +1233,15 @@
       .phone-wrapper {
         position: relative !important;
         top: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
       }
       .phone-shell {
         width: 100vw !important;
-        height: 100vh !important;
+        max-width: 100vw !important;
+        height: 100dvh !important;
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
@@ -1247,8 +1250,7 @@
         display: none !important;
       }
       .phone-status-bar {
-        height: 24px !important;
-        padding-top: 4px !important;
+        display: none !important;
       }
       .main-workspace-content {
         display: none !important;
@@ -1674,6 +1676,11 @@
       document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
       const activeScr = document.getElementById(screenId);
       if (activeScr) activeScr.classList.add('active');
+      
+      // Asegurar que el scroll se resetee arriba al cambiar de pantalla
+      window.scrollTo(0, 0);
+      const container = document.getElementById('phone-screen-container');
+      if (container) container.scrollTop = 0;
       
       // Actualizar navbar inferior del simulador
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
