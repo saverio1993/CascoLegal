@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#1A365D">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/assets/panama-flag.png">
@@ -54,7 +54,13 @@
       color: var(--color-text-main);
       font-family: var(--font-body);
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
+    }
+
+    html {
+      min-height: 100%;
+      background-color: var(--bg-main);
     }
 
     /* HEADER */
@@ -181,6 +187,7 @@
       box-shadow: 0 0 50px rgba(0, 0, 0, 0.6);
       border-left: 1px solid var(--border-color);
       border-right: 1px solid var(--border-color);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
 
@@ -193,6 +200,7 @@
       overflow-x: hidden;
       display: flex;
       flex-direction: column;
+      overscroll-behavior: none;
     }
 
     .phone-screen::-webkit-scrollbar {
@@ -774,7 +782,8 @@
       border: none;
       color: white;
       font-family: var(--font-body);
-      font-size: 0.75rem;
+      /* 16px evita que Safari haga zoom automático al escribir. */
+      font-size: 16px;
       padding: 0.5rem;
       outline: none;
     }
@@ -1381,6 +1390,7 @@
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
+        padding-bottom: env(safe-area-inset-bottom) !important;
       }
       .phone-notch {
         display: none !important;
@@ -1390,6 +1400,17 @@
       }
       .main-workspace-content {
         display: none !important;
+      }
+
+      .screen {
+        min-height: 0;
+        padding-left: max(1rem, env(safe-area-inset-left));
+        padding-right: max(1rem, env(safe-area-inset-right));
+      }
+
+      .phone-navbar {
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(56px + env(safe-area-inset-bottom));
       }
     }
 
@@ -1472,7 +1493,7 @@
                 <div class="modal-header">
                   <h5>Descarga para usar sin internet</h5>
                 </div>
-                <p style="font-size: 0.75rem; line-height: 1.45; color: var(--color-text-muted); margin-bottom: 1rem;">
+                <p id="offline-install-help" style="font-size: 0.75rem; line-height: 1.45; color: var(--color-text-muted); margin-bottom: 1rem;">
                   Instala CascoLegal y descarga los documentos oficiales de tránsito en este dispositivo. Así podrás consultarlos aunque no tengas conexión.
                 </p>
                 <div class="download-progress-container" id="offline-modal-progress-box" style="display: none; margin-bottom: 1rem;">
@@ -1774,6 +1795,7 @@
       renderLibraryList();
       renderLatestLaws();
       refreshOfflinePdfCard();
+      updateInstallHelpForDevice();
       
       // Verificar si ya se ejecuta como PWA instalada
       if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
@@ -1928,6 +1950,20 @@
         if (!cachedPdf) return false;
       }
       return true;
+    }
+
+    function isIOSDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function updateInstallHelpForDevice() {
+      const help = document.getElementById('offline-install-help');
+      const button = document.getElementById('offline-modal-download-btn');
+      if (!help || !button || !isIOSDevice()) return;
+      help.textContent = 'En iPhone o iPad, abre CascoLegal en Safari, pulsa Compartir y elige “Añadir a pantalla de inicio”. Luego abre la aplicación desde el nuevo icono para guardar los PDFs offline.';
+      button.innerHTML = '<i data-lucide="share" style="width: 14px; height: 14px;"></i> Ver instrucciones y guardar PDFs offline';
+      lucide.createIcons();
     }
 
     async function refreshOfflinePdfCard() {
@@ -2200,12 +2236,36 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       if (!text) return;
       
       input.value = '';
+      input.blur();
       const ragRes = runLocalRAG(text);
       injectAnswerInPhoneChat(text, ragRes);
+      restoreMobileViewport();
     }
     
     function handleChatEnter(e) {
-      if (e.key === 'Enter') sendChatMessage();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    }
+
+    function restoreMobileViewport() {
+      window.setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        const container = document.getElementById('phone-screen-container');
+        if (container) container.scrollTop = 0;
+      }, 120);
+    }
+
+    const chatInput = document.getElementById('chat-user-input');
+    if (chatInput) chatInput.addEventListener('blur', restoreMobileViewport);
+    if (window.visualViewport) {
+      let lastViewportHeight = window.visualViewport.height;
+      window.visualViewport.addEventListener('resize', () => {
+        const currentHeight = window.visualViewport.height;
+        if (currentHeight > lastViewportHeight + 80) restoreMobileViewport();
+        lastViewportHeight = currentHeight;
+      });
     }
     
     // PRESET SHORTCUT QUERIES FROM HOME
@@ -2370,9 +2430,9 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           button.disabled = false;
           button.style.opacity = '1';
         }
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isIOS = isIOSDevice();
         if (isIOS) {
-          alert('Para instalar CascoLegal en iPhone o iPad: pulsa Compartir y elige “Añadir a pantalla de inicio”. Después vuelve a abrir CascoLegal desde el nuevo icono y pulsa este botón para guardar los PDFs offline.');
+          alert('En iPhone o iPad, abre esta página en Safari. Pulsa Compartir y elige “Añadir a pantalla de inicio”. Después abre CascoLegal desde el nuevo icono y pulsa este botón para guardar los PDFs offline.');
         } else {
           alert('Chrome no mostró la ventana automática de instalación. Abre el menú ⋮ y elige “Instalar CascoLegal” o “Agregar a pantalla de inicio”. Después vuelve a pulsar este botón para descargar los PDFs offline.');
         }
