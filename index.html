@@ -2010,10 +2010,10 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         explanation.textContent = 'FALSO (para particulares). Según la Resolución OAL N° 973 del 6 de agosto de 2013 de la ATTT, el uso de prendas reflectivas o chalecos es obligatorio únicamente en horario de 6:00 p.m. a 6:00 a.m. Durante el día (de 6:00 a.m. a 6:00 p.m.), los motociclistas particulares NO están obligados por ley a usar chaleco reflectivo. Multar de día por esto es ilegal.';
         evidence.textContent = '"Establece la obligatoriedad de utilizar prendas de vestir reflectivas o de alta visibilidad en el horario comprendido entre las 6:00 p.m. y las 6:00 a.m. para conductores y acompañantes de motocicletas..."';
       } else if (norm.includes('chaleco') && (norm.includes('6') || norm.includes('noche') || norm.includes('horario'))) {
-        badge.className = 'badge-status status-parcial';
-        badge.textContent = 'PARCIALMENTE CONFIRMADA';
-        explanation.textContent = 'El uso del chaleco reflectivo (con el número de placa impreso) es obligatorio para los motociclistas durante todo el día (y especialmente de noche para visibilidad) según la Resolución OAL N° 973 de 2013. Sin embargo, no existe una ley o decreto que límite la obligatoriedad exclusivamente a partir de las 6:00 p.m., sino que aplica durante toda la circulación en la vía pública.';
-        evidence.textContent = '"Se establece el uso obligatorio de chaleco reflectivo de color azul, naranja o gris para todos los conductores de motocicletas y sus acompañantes durante su circulación en las vías de la República de Panamá..."';
+        badge.className = 'badge-status status-confirmada';
+        badge.textContent = 'CONFIRMADA';
+        explanation.textContent = 'CONFIRMADA. Según la Resolución OAL N° 973 del 6 de agosto de 2013 de la ATTT, el uso del chaleco reflectivo (con el número de placa impreso) es obligatorio únicamente en horario nocturno, de 6:00 p.m. a 6:00 a.m., para motociclistas particulares. Fuera de este horario (de día), los conductores particulares NO están obligados a usarlo.';
+        evidence.textContent = '"Establece la obligatoriedad de utilizar prendas de vestir reflectivas o de alta visibilidad en el horario comprendido entre las 6:00 p.m. y las 6:00 a.m. para conductores y acompañantes de motocicletas..."';
       } else if (norm.includes('verde') || norm.includes('limon') || norm.includes('verde limon')) {
         badge.className = 'badge-status status-confirmada';
         badge.textContent = 'CONFIRMADA';
