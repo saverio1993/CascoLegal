@@ -1,4 +1,6 @@
-const CACHE_NAME = 'cascolegal-v13';
+const CACHE_NAME = 'cascolegal-v14';
+const LEGACY_PDF_CACHE_NAME = 'cascolegal-v6';
+const PDF_CACHE_PREFIX = 'cascolegal-pdfs-';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -34,7 +36,9 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
+          // Los PDF offline se gestionan por separado y deben sobrevivir las
+          // actualizaciones de la interfaz de la aplicación.
+          if (cache !== CACHE_NAME && cache !== LEGACY_PDF_CACHE_NAME && !cache.startsWith(PDF_CACHE_PREFIX)) {
             console.log('[Service Worker] Deleting old cache:', cache);
             return caches.delete(cache);
           }

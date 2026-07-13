@@ -2411,27 +2411,70 @@
       '19': '/pdfs/Decreto_Ejecutivo_19_2022.pdf',
       '973': '/pdfs/Resolucion_OAL_973_2013.pdf'
     };
-    const OFFLINE_PDF_CACHE_NAME = 'cascolegal-v6';
-    const LEGACY_OFFLINE_PDF_URLS = [
-      'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_640_2006.pdf',
-      'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_19_2022.pdf',
-      'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
-    ];
+    // Los documentos se guardan en una caché independiente del contenido de la app.
+    // Así una actualización de CascoLegal no elimina los PDF que el conductor ya descargó.
+    const OFFLINE_PDF_CACHE_NAME = 'cascolegal-pdfs-v7';
+    const LEGACY_OFFLINE_PDF_CACHE_NAMES = ['cascolegal-v6'];
+    const OFFLINE_PDF_RELEASE = '2026-07-13-pdf-fix';
+
+    function hasPdfSignature(bytes) {
+      return bytes && bytes.length >= 5 &&
+        bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 &&
+        bytes[3] === 0x46 && bytes[4] === 0x2d;
+    }
+
+    async function isValidPdfResponse(response) {
+      if (!response || !response.ok || response.type === 'opaque') return false;
+      try {
+        const bytes = new Uint8Array(await response.clone().arrayBuffer());
+        return hasPdfSignature(bytes);
+      } catch (error) {
+        return false;
+      }
+    }
+
+    async function getOfflinePdf(localPdfUrl) {
+      const canonicalUrl = new URL(localPdfUrl, location.origin).href;
+      const offlineCache = await caches.open(OFFLINE_PDF_CACHE_NAME);
+      let response = await offlineCache.match(canonicalUrl);
+
+      if (response && await isValidPdfResponse(response)) return response;
+      if (response) await offlineCache.delete(canonicalUrl);
+
+      // Conserva las descargas ya hechas y las migra solo si el PDF es válido.
+      for (const cacheName of LEGACY_OFFLINE_PDF_CACHE_NAMES) {
+        const legacyCache = await caches.open(cacheName);
+        response = await legacyCache.match(canonicalUrl);
+        if (response && await isValidPdfResponse(response)) {
+          await offlineCache.put(canonicalUrl, response.clone());
+          return response;
+        }
+        if (response) await legacyCache.delete(canonicalUrl);
+      }
+
+      return null;
+    }
+
+    async function downloadFreshPdf(localPdfUrl) {
+      const canonicalUrl = new URL(localPdfUrl, location.origin).href;
+      const freshUrl = new URL(canonicalUrl);
+      // Evita que una entrada antigua del service worker reemplace la descarga verificada.
+      freshUrl.searchParams.set('release', OFFLINE_PDF_RELEASE);
+      const response = await fetch(freshUrl.href, { cache: 'no-store' });
+
+      if (!response.ok || !await isValidPdfResponse(response)) {
+        throw new Error('El archivo PDF descargado no es válido.');
+      }
+
+      const offlineCache = await caches.open(OFFLINE_PDF_CACHE_NAME);
+      await offlineCache.put(canonicalUrl, response.clone());
+      return response;
+    }
 
     async function areOfflinePdfsReady() {
       const localUrls = Object.values(OFFLINE_PDF_BY_DOCUMENT);
-      const cache = await caches.open(OFFLINE_PDF_CACHE_NAME);
-      for (let i = 0; i < localUrls.length; i++) {
-        const localUrl = new URL(localUrls[i], location.origin).href;
-        let cachedPdf = await cache.match(localUrl);
-        if (!cachedPdf && LEGACY_OFFLINE_PDF_URLS[i]) {
-          const legacyPdf = await cache.match(LEGACY_OFFLINE_PDF_URLS[i]);
-          if (legacyPdf) {
-            await cache.put(localUrl, legacyPdf.clone());
-            cachedPdf = legacyPdf;
-          }
-        }
-        if (!cachedPdf) return false;
+      for (const localUrl of localUrls) {
+        if (!await getOfflinePdf(localUrl)) return false;
       }
       return true;
     }
@@ -2629,12 +2672,34 @@
       '33333333-3333-3333-3333-333333333305': 1
     };
 
+    function ensurePdfJsCompatibility() {
+      // PDF.js 5 usa Promise.withResolvers, disponible en Safari reciente. Este
+      // reemplazo permite que el visor funcione también en iPhone con Safari anterior.
+      if (typeof Promise.withResolvers !== 'function') {
+        Promise.withResolvers = function withResolvers() {
+          let resolve;
+          let reject;
+          const promise = new Promise((resolvePromise, rejectPromise) => {
+            resolve = resolvePromise;
+            reject = rejectPromise;
+          });
+          return { promise, resolve, reject };
+        };
+      }
+    }
+
     function loadPdfJsModule() {
       if (!pdfJsModulePromise) {
-        pdfJsModulePromise = import('/assets/pdfjs/pdf.mjs').then(pdfjs => {
-          pdfjs.GlobalWorkerOptions.workerSrc = '/assets/pdfjs/pdf.worker.mjs';
-          return pdfjs;
-        });
+        ensurePdfJsCompatibility();
+        pdfJsModulePromise = import(`/assets/pdfjs/pdf.mjs?release=${OFFLINE_PDF_RELEASE}`)
+          .then(pdfjs => {
+            pdfjs.GlobalWorkerOptions.workerSrc = `/assets/pdfjs/pdf.worker.mjs?release=${OFFLINE_PDF_RELEASE}`;
+            return pdfjs;
+          })
+          .catch(error => {
+            pdfJsModulePromise = null;
+            throw error;
+          });
       }
       return pdfJsModulePromise;
     }
@@ -2670,18 +2735,21 @@
 
       try {
         if (!localPdfUrl) throw new Error('Este documento todavía no está disponible dentro de CascoLegal.');
-        const cachedPdf = await caches.match(new URL(localPdfUrl, location.origin).href);
-        let pdfResponse = cachedPdf;
-        if (cachedPdf) {
+        let pdfResponse = await getOfflinePdf(localPdfUrl);
+        if (pdfResponse) {
           sourceLabel = 'Documento PDF guardado en este dispositivo (modo offline).';
         } else {
-          pdfResponse = await fetch(localPdfUrl);
-          if (!pdfResponse.ok) throw new Error('No se pudo cargar el documento PDF.');
+          pdfResponse = await downloadFreshPdf(localPdfUrl);
         }
 
         document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
         const pdfjs = await loadPdfJsModule();
         const pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
+        if (!hasPdfSignature(pdfBytes)) throw new Error('El documento descargado no es un PDF válido.');
+        if (pdfDocumentInstance) {
+          await pdfDocumentInstance.destroy();
+          pdfDocumentInstance = null;
+        }
         pdfDocumentInstance = await pdfjs.getDocument({ data: pdfBytes }).promise;
         pdfCurrentPage = Math.min(PDF_PAGE_BY_ARTICLE[articleId] || 1, pdfDocumentInstance.numPages);
         pdfZoom = 1;
@@ -3273,7 +3341,6 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       downloadBtns.forEach(element => { element.disabled = true; element.style.opacity = '0.5'; });
 
       try {
-        const cache = await caches.open(OFFLINE_PDF_CACHE_NAME);
         let totalFiles = pdfUrls.length;
         let completedFiles = 0;
 
@@ -3282,12 +3349,8 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           const filename = url.substring(url.lastIndexOf('/') + 1);
           statusLbls.forEach(element => element.textContent = `Descargando: ${filename.substring(0, 15)}...`);
           
-          // Download using fetch to trace progress
-          const response = await fetch(url);
-          if (!response.ok) throw new Error(`Fallo de red al descargar ${url}`);
-
-          // Caching the downloaded blob
-          await cache.put(url, response.clone());
+          // Cada descarga se valida antes de guardarse para evitar archivos incompletos.
+          await downloadFreshPdf(url);
           
           completedFiles++;
           const percent = Math.round((completedFiles / totalFiles) * 100);
