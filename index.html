@@ -1357,7 +1357,9 @@
             <div class="screen active" id="screen-splash" style="justify-content: space-between; height: 100%; padding-bottom: 2rem;">
               <div></div>
               <div style="text-align: center; padding: 0 1.5rem;">
-                <div class="splash-logo" style="font-size: 4rem; background: none; box-shadow: none; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; height: auto; width: auto;">🇵🇦</div>
+                <div class="splash-logo" style="background: none; box-shadow: none; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; height: auto; width: auto;">
+                  <img src="/assets/panama-flag.png" alt="Bandera de Panamá" style="width: 118px; height: auto; border-radius: 8px; display: block;">
+                </div>
                 <h2 class="splash-title">CascoLegal</h2>
                 <p class="splash-subtitle" style="margin-bottom: 2rem;">“Un ciudadano informado conoce y defiende sus derechos”</p>
                 
@@ -1833,7 +1835,9 @@
           <h6>Artículo ${art.articleNumber}: ${art.title}</h6>
           <p>${art.content}</p>
           <div style="margin-top: 6px; display: flex; justify-content: flex-end;">
-            <span style="font-size: 0.6rem; color: var(--color-text-muted);">Consulta disponible en Preguntar</span>
+            <button class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.65rem; border-radius: 6px;" onclick="openPdfViewer('${art.id}')">
+              <i data-lucide="file-text" style="width: 11px; height: 11px;"></i> Ver documento PDF
+            </button>
           </div>
         `;
         container.appendChild(div);
@@ -1875,10 +1879,13 @@
       goToScreen('screen-agent-mode');
     }
 
+    let pdfViewerReturnScreen = 'screen-chat';
+
     function openPdfViewer(articleId) {
       const art = SIMULATOR_DB.find(item => item.id === articleId);
       if (!art) return;
 
+      pdfViewerReturnScreen = currentScreen === 'screen-pdf-viewer' ? 'screen-chat' : currentScreen;
       document.getElementById('pdf-viewer-heading').textContent = `${art.documentType} N° ${art.documentNumber}`;
       document.getElementById('pdf-viewer-article').textContent = `Artículo ${art.articleNumber}: ${art.title}`;
       document.getElementById('pdf-viewer-highlight').textContent = art.content;
@@ -1886,6 +1893,10 @@
       document.getElementById('pdf-viewer-external-link').setAttribute('href', art.gazetteUrl);
       goToScreen('screen-pdf-viewer');
       lucide.createIcons();
+    }
+
+    function closePdfViewer() {
+      goToScreen(pdfViewerReturnScreen || 'screen-chat');
     }
     
     // MOCK RAG ENGINE IN FRONTEND
