@@ -417,6 +417,46 @@
       transform: translateY(-2px);
     }
 
+    .shortcut-card--chalecos {
+      border-color: rgba(34, 211, 238, 0.5);
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.13), var(--phone-card-bg) 58%);
+    }
+
+    .shortcut-card--delivery {
+      border-color: rgba(245, 158, 11, 0.6);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), var(--phone-card-bg) 58%);
+    }
+
+    .shortcut-card--licencia {
+      border-color: rgba(167, 139, 250, 0.6);
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.14), var(--phone-card-bg) 58%);
+    }
+
+    .shortcut-card--retencion {
+      border-color: rgba(248, 113, 113, 0.6);
+      background: linear-gradient(135deg, rgba(248, 113, 113, 0.14), var(--phone-card-bg) 58%);
+    }
+
+    .shortcut-card--chalecos .shortcut-icon {
+      color: #22d3ee;
+      background-color: rgba(34, 211, 238, 0.14);
+    }
+
+    .shortcut-card--delivery .shortcut-icon {
+      color: #f59e0b;
+      background-color: rgba(245, 158, 11, 0.14);
+    }
+
+    .shortcut-card--licencia .shortcut-icon {
+      color: #a78bfa;
+      background-color: rgba(167, 139, 250, 0.14);
+    }
+
+    .shortcut-card--retencion .shortcut-icon {
+      color: #f87171;
+      background-color: rgba(248, 113, 113, 0.14);
+    }
+
     .shortcut-icon {
       width: 36px;
       height: 36px;
@@ -1449,22 +1489,22 @@
               
               <!-- Grid Shortcuts -->
               <div class="grid-shortcuts">
-                <div class="shortcut-card" onclick="triggerPresetQuery('chaleco')">
+                <div class="shortcut-card shortcut-card--chalecos" onclick="triggerPresetQuery('chaleco')">
                   <div class="shortcut-icon"><i data-lucide="shirt" style="width: 16px; height: 16px;"></i></div>
                   <h5>Chalecos</h5>
                   <p>Normas de prendas reflectivas</p>
                 </div>
-                <div class="shortcut-card" onclick="triggerPresetQuery('delivery')">
-                  <div class="shortcut-icon" style="color: var(--color-secondary); background-color: rgba(245,158,11,0.1);"><i data-lucide="package" style="width: 16px; height: 16px;"></i></div>
+                <div class="shortcut-card shortcut-card--delivery" onclick="triggerPresetQuery('delivery')">
+                  <div class="shortcut-icon"><i data-lucide="package" style="width: 16px; height: 16px;"></i></div>
                   <h5>Delivery</h5>
                   <p>Decreto 19 de 2022 de carga</p>
                 </div>
-                <div class="shortcut-card" onclick="triggerPresetQuery('licencia')">
+                <div class="shortcut-card shortcut-card--licencia" onclick="triggerPresetQuery('licencia')">
                   <div class="shortcut-icon"><i data-lucide="user-check" style="width: 16px; height: 16px;"></i></div>
                   <h5>Licencia</h5>
                   <p>Requisitos de la Tipo B de moto</p>
                 </div>
-                <div class="shortcut-card" onclick="triggerPresetQuery('retencion')">
+                <div class="shortcut-card shortcut-card--retencion" onclick="triggerPresetQuery('retencion')">
                   <div class="shortcut-icon"><i data-lucide="truck" style="width: 16px; height: 16px;"></i></div>
                   <h5>Retención</h5>
                   <p>Cuándo se lleva la moto la grúa</p>
