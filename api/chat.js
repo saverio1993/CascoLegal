@@ -1,15 +1,22 @@
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const MODEL = process.env.MINIMAX_MODEL || 'MiniMax-M2.7';
+const API_URL = process.env.MINIMAX_API_URL || 'https://api.minimax.io/v1/chat/completions';
+
+function cleanModelText(value) {
+  return String(value || '')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .trim();
+}
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido.' });
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: 'El chat no está configurado. Añade GEMINI_API_KEY en Vercel.' });
+  const apiKey = process.env.MINIMAX_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: 'El chat no está configurado. Añade MINIMAX_API_KEY en Vercel.' });
 
   try {
     const { messages, context } = req.body || {};
     const cleanMessages = Array.isArray(messages)
-      ? messages.filter(m => ['user', 'model'].includes(m?.role) && typeof m?.text === 'string')
-          .slice(-12).map(m => ({ role: m.role, parts: [{ text: m.text.slice(0, 4000) }] }))
+      ? messages.filter(m => ['user', 'model', 'assistant'].includes(m?.role) && typeof m?.text === 'string')
+          .slice(-12).map(m => ({ role: m.role === 'model' ? 'assistant' : m.role, content: m.text.slice(0, 4000) }))
       : [];
     if (!cleanMessages.length || cleanMessages.at(-1).role !== 'user') {
       return res.status(400).json({ error: 'Debes enviar una pregunta.' });
@@ -29,16 +36,22 @@ Cuando exista fundamento, menciona el documento y el artículo. Aclara que la re
 Contexto legal indexado:
 ${JSON.stringify(safeContext)}`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: systemInstruction }] }, contents: cleanMessages }),
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'system', content: systemInstruction }, ...cleanMessages],
+        temperature: 0.2,
+        max_tokens: 1200,
+      }),
     });
     const data = await response.json();
     if (!response.ok) {
-      console.error('Gemini API error:', response.status, data?.error?.message || 'unknown');
-      return res.status(502).json({ error: 'No se pudo consultar Gemini en este momento.' });
+      console.error('MiniMax API error:', response.status, data?.error?.message || data?.base_resp?.status_msg || 'unknown');
+      return res.status(502).json({ error: 'No se pudo consultar MiniMax en este momento.' });
     }
-    const text = data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
+    const text = cleanModelText(data?.choices?.[0]?.message?.content);
     if (!text) return res.status(502).json({ error: 'Gemini devolvió una respuesta vacía.' });
     return res.status(200).json({ text });
   } catch (error) {

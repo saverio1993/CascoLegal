@@ -1846,10 +1846,24 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     }
     
     // INJECT ANSWER IN PHONE CHAT
-    let chatHistory = [];
+    let chatHistory = JSON.parse(localStorage.getItem('cascolegal-chat-history') || '[]');
+    let chatAnswerCache = JSON.parse(localStorage.getItem('cascolegal-chat-cache') || '{}');
+
+    function chatCacheKey(value) {
+      return String(value).trim().toLowerCase().replace(/\\s+/g, ' ').slice(0, 300);
+    }
+
+    function saveChatState() {
+      localStorage.setItem('cascolegal-chat-history', JSON.stringify(chatHistory.slice(-12)));
+      localStorage.setItem('cascolegal-chat-cache', JSON.stringify(chatAnswerCache));
+    }
 
     function escapeHTML(value) {
       return String(value).replace(/[&<>\'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+    }
+
+    function cleanAssistantText(value) {
+      return String(value || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     }
 
     async function injectAnswerInPhoneChat(userQuery, ragResult) {
@@ -1871,24 +1885,16 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       container.appendChild(loadingMsgDiv);
       container.scrollTop = container.scrollHeight;
       
-      // Consultar Gemini mediante la función segura del servidor
+      // Consultar MiniMax mediante la función segura del servidor.
       let aiResponse = await callGeminiAI(userQuery, ragResult);
-      
-        // Si Gemini no responde, no mostrar mensajes de error ni citas locales.
-        // La pestaña debe permanecer visualmente vacía hasta que exista una respuesta real.
-        if (!aiResponse) {
-          userMsgDiv.remove();
-          loadingMsgDiv.remove();
+      let answerText = aiResponse || chatAnswerCache[chatCacheKey(userQuery)];
 
-          const empty = document.createElement('div');
-          empty.className = 'chat-empty-state';
-          empty.id = 'chat-empty-state';
-          empty.textContent = 'Escribe una pregunta para consultar la normativa de tránsito.';
-          container.appendChild(empty);
-          return;
-        }
-
-        const answerText = aiResponse;
+      // Si no hay respuesta remota ni una respuesta guardada, usar la base legal local.
+      if (!answerText) {
+        answerText = ragResult.matches.length
+          ? 'No pude conectar con la IA. Encontré estos fundamentos en la base legal local:'
+          : 'No encontré una disposición oficial en la base de datos local para esa consulta.';
+      }
       
       // Rellenar la respuesta final
       loadingMsgDiv.innerHTML = `
@@ -2133,8 +2139,11 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || `Error HTTP: ${response.status}`);
-        chatHistory = [...messages, { role: 'model', text: data.text }].slice(-12);
-        return data.text;
+        const cleanText = cleanAssistantText(data.text);
+        chatHistory = [...messages, { role: 'model', text: cleanText }].slice(-12);
+        chatAnswerCache[chatCacheKey(userQuery)] = cleanText;
+        saveChatState();
+        return cleanText;
       } catch (err) {
         console.error('Error al llamar a Gemini API:', err);
         return null;
