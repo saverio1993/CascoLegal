@@ -1781,7 +1781,7 @@
         content: 'Los conductores de motocicletas, bicicletas y sus pasajeros deberán portar casco de protección y chalecos o aditamentos reflectivos, de acuerdo con el reglamento que para este efecto expida la Autoridad del Tránsito.',
         statusVigency: 'vigente',
         gazetteNumber: '25700',
-        gazetteUrl: 'https://www.transito.gob.pa/sites/default/files/documentos/decreto_ejecutivo_no.640_del_27_de_diciembre_de_2006.pdf',
+        gazetteUrl: '/pdfs/Decreto_Ejecutivo_640_2006.pdf',
         keywords: ['casco', 'chaleco', 'reflectivo', 'proteccion', 'seguridad', 'pasajero', 'noche', 'obligatorio']
       },
       {
@@ -1795,7 +1795,7 @@
         content: 'Las licencias de conducir se clasifican de la siguiente manera: Tipo A: Bicicletas y ciclomotores de pedales. Tipo B: Motocicletas, motonetas, triciclos y cuadriciclos a motor. Tipo C: Automóviles de servicio particular.',
         statusVigency: 'vigente',
         gazetteNumber: '25700',
-        gazetteUrl: 'https://www.transito.gob.pa/sites/default/files/documentos/decreto_ejecutivo_no.640_del_27_de_diciembre_de_2006.pdf',
+        gazetteUrl: '/pdfs/Decreto_Ejecutivo_640_2006.pdf',
         keywords: ['licencia', 'tipo b', 'motocicleta', 'requisito', 'edad', 'manejar']
       },
       {
@@ -1809,7 +1809,7 @@
         content: 'La Autoridad del Tránsito o la Policía Nacional procederán al retiro del vehículo de la vía pública con grúa en los siguientes casos: a. Sin condiciones óptimas de seguridad. b. Embriaguez comprobada. c. Sin licencia de conducir. d. Sin placa única nacional o calcomanías obligatorias.',
         statusVigency: 'vigente',
         gazetteNumber: '25700',
-        gazetteUrl: 'https://www.transito.gob.pa/sites/default/files/documentos/decreto_ejecutivo_no.640_del_27_de_diciembre_de_2006.pdf',
+        gazetteUrl: '/pdfs/Decreto_Ejecutivo_640_2006.pdf',
         keywords: ['retencion', 'grua', 'placa', 'embriaguez', 'licencia', 'operativo', 'llevarse', 'moto', 'retener']
       },
       {
@@ -1823,7 +1823,7 @@
         content: 'Las motocicletas destinadas al servicio de transporte de carga, mensajería o delivery deberán llevar el número de la placa única nacional impreso y plenamente visible en la parte trasera de la caja o bolso de carga. Si no usan caja, deberán portar un chaleco reflectivo con el número de placa impreso. Tipografía Arial, 7 cm de altura, color rojo sobre fondo blanco reflectivo.',
         statusVigency: 'vigente',
         gazetteNumber: '29641-A',
-        gazetteUrl: 'https://www.gacetaoficial.gob.pa/pdfTemp/29641_A/94595.pdf',
+        gazetteUrl: '/pdfs/Decreto_Ejecutivo_19_2022.pdf',
         keywords: ['delivery', 'mensajeria', 'placa', 'chaleco', 'caja', 'rotulacion', 'rojo', 'blanco', 'reflectivo']
       },
       {
@@ -1837,15 +1837,15 @@
         content: 'Se establece el uso obligatorio de prendas de vestir reflectivas o de alta visibilidad para todos los conductores de motocicletas, motociclos, triciclos y sus acompañantes en el horario comprendido entre las 6:00 p.m. y las 6:00 a.m. durante su circulación en las vías públicas de la República de Panamá. El chaleco deberá llevar impreso en la parte posterior el número de placa de la motocicleta. Queda expresamente prohibido el uso de chalecos reflectivos de color verde limón.',
         statusVigency: 'vigente',
         gazetteNumber: '27349',
-        gazetteUrl: 'https://www.gacetaoficial.gob.pa/pdfTemp/27349/46083.pdf',
+        gazetteUrl: '/pdfs/Resolucion_OAL_973_2013.pdf',
         keywords: ['chaleco', 'placa', 'verde', 'prohibido', 'color', 'azul', 'gris', 'naranja', 'horario', 'noche', '6:00']
       }
     ];
 
     const OFFLINE_PDF_BY_DOCUMENT = {
-      '640': 'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_640_2006.pdf',
-      '19': 'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_19_2022.pdf',
-      '973': 'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
+      '640': '/pdfs/Decreto_Ejecutivo_640_2006.pdf',
+      '19': '/pdfs/Decreto_Ejecutivo_19_2022.pdf',
+      '973': '/pdfs/Resolucion_OAL_973_2013.pdf'
     };
 
     // RENDER BIBLIOTECA LIST
@@ -1906,7 +1906,7 @@
       
       document.getElementById('agent-display-title').textContent = `Artículo ${art.articleNumber}`;
       document.getElementById('agent-display-body').textContent = art.content;
-      document.getElementById('agent-display-pdf-link').setAttribute('href', art.gazetteUrl);
+      document.getElementById('agent-display-pdf-link').setAttribute('href', OFFLINE_PDF_BY_DOCUMENT[art.documentNumber] || '#');
       
       goToScreen('screen-agent-mode');
     }
@@ -1926,11 +1926,11 @@
       lucide.createIcons();
 
       const localPdfUrl = OFFLINE_PDF_BY_DOCUMENT[art.documentNumber];
-      let pdfUrl = art.gazetteUrl;
-      let sourceLabel = 'Documento oficial en línea. Descarga los PDFs offline para consultarlo sin internet.';
+      let pdfUrl = localPdfUrl || '';
+      let sourceLabel = 'Documento alojado dentro de CascoLegal en Vercel.';
 
       try {
-        const cachedPdf = localPdfUrl ? await caches.match(localPdfUrl) : null;
+        const cachedPdf = localPdfUrl ? await caches.match(new URL(localPdfUrl, location.origin).href) : null;
         if (cachedPdf) {
           if (pdfViewerObjectUrl) URL.revokeObjectURL(pdfViewerObjectUrl);
           pdfViewerObjectUrl = URL.createObjectURL(await cachedPdf.blob());
@@ -1939,6 +1939,10 @@
         }
       } catch (error) {
         console.warn('No se pudo leer el PDF offline:', error);
+      }
+
+      if (!pdfUrl) {
+        sourceLabel = 'Este documento todavía no está disponible dentro de CascoLegal.';
       }
 
       document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
@@ -2338,9 +2342,9 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     // Offline PDFs download & caching
     async function startOfflineCacheDownload() {
       const pdfUrls = [
-        'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_640_2006.pdf',
-        'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_19_2022.pdf',
-        'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
+        '/pdfs/Decreto_Ejecutivo_640_2006.pdf',
+        '/pdfs/Decreto_Ejecutivo_19_2022.pdf',
+        '/pdfs/Resolucion_OAL_973_2013.pdf'
       ];
       
       const progressBoxes = [document.getElementById('download-progress-box'), document.getElementById('offline-modal-progress-box')].filter(Boolean);
