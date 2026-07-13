@@ -2383,11 +2383,28 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         button.style.opacity = '0.65';
       }
 
+      const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (!deferredPrompt && !isInstalled) {
+        if (button) {
+          button.disabled = false;
+          button.style.opacity = '1';
+        }
+        alert('Chrome todavía no habilitó la ventana de instalación. Cierra y vuelve a abrir CascoLegal en Chrome, espera unos segundos y pulsa nuevamente “Instalar aplicación y descargar PDFs offline”.');
+        return;
+      }
+
       if (deferredPrompt) {
         const installEvent = deferredPrompt;
         deferredPrompt = null;
         installEvent.prompt();
-        await installEvent.userChoice;
+        const choice = await installEvent.userChoice;
+        if (choice.outcome !== 'accepted') {
+          if (button) {
+            button.disabled = false;
+            button.style.opacity = '1';
+          }
+          return;
+        }
       }
 
       await startOfflineCacheDownload();
