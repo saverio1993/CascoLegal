@@ -69,7 +69,7 @@ ${JSON.stringify(legispanContext)}`;
         model: MODEL,
         messages: [{ role: 'system', content: systemInstruction }, ...cleanMessages],
         temperature: 0.2,
-        max_tokens: 1200,
+        max_tokens: 700,
       }),
     });
     const data = await response.json();
