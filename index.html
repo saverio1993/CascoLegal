@@ -1551,6 +1551,7 @@
                 <strong id="pdf-viewer-article">Artículo citado</strong>
                 <p id="pdf-viewer-highlight" style="font-size: 0.7rem; line-height: 1.45; margin-top: 0.35rem;"></p>
               </div>
+              <p id="pdf-viewer-source-label" style="font-size: 0.65rem; color: var(--status-vigente); margin-bottom: 0.5rem;">Buscando documento guardado en este dispositivo...</p>
               <iframe class="pdf-viewer-frame" id="pdf-viewer-frame" title="Documento PDF oficial"></iframe>
               <a class="citation-link" id="pdf-viewer-external-link" target="_blank" rel="noopener noreferrer" style="margin-top: 0.6rem;">
                 <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> Abrir PDF en otra pestaña
@@ -1816,6 +1817,12 @@
       }
     ];
 
+    const OFFLINE_PDF_BY_DOCUMENT = {
+      '640': 'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_640_2006.pdf',
+      '19': 'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Decreto_Ejecutivo_19_2022.pdf',
+      '973': 'https://raw.githubusercontent.com/saverio1993/CascoLegal/main/pdfs/Resolucion_OAL_973_2013.pdf'
+    };
+
     // RENDER BIBLIOTECA LIST
     function renderLibraryList() {
       const container = document.getElementById('library-list-container');
@@ -1880,8 +1887,9 @@
     }
 
     let pdfViewerReturnScreen = 'screen-chat';
+    let pdfViewerObjectUrl = null;
 
-    function openPdfViewer(articleId) {
+    async function openPdfViewer(articleId) {
       const art = SIMULATOR_DB.find(item => item.id === articleId);
       if (!art) return;
 
@@ -1889,10 +1897,28 @@
       document.getElementById('pdf-viewer-heading').textContent = `${art.documentType} N° ${art.documentNumber}`;
       document.getElementById('pdf-viewer-article').textContent = `Artículo ${art.articleNumber}: ${art.title}`;
       document.getElementById('pdf-viewer-highlight').textContent = art.content;
-      document.getElementById('pdf-viewer-frame').setAttribute('src', art.gazetteUrl);
-      document.getElementById('pdf-viewer-external-link').setAttribute('href', art.gazetteUrl);
       goToScreen('screen-pdf-viewer');
       lucide.createIcons();
+
+      const localPdfUrl = OFFLINE_PDF_BY_DOCUMENT[art.documentNumber];
+      let pdfUrl = art.gazetteUrl;
+      let sourceLabel = 'Documento oficial en línea. Descarga los PDFs offline para consultarlo sin internet.';
+
+      try {
+        const cachedPdf = localPdfUrl ? await caches.match(localPdfUrl) : null;
+        if (cachedPdf) {
+          if (pdfViewerObjectUrl) URL.revokeObjectURL(pdfViewerObjectUrl);
+          pdfViewerObjectUrl = URL.createObjectURL(await cachedPdf.blob());
+          pdfUrl = pdfViewerObjectUrl;
+          sourceLabel = 'Documento PDF guardado en este dispositivo (modo offline).';
+        }
+      } catch (error) {
+        console.warn('No se pudo leer el PDF offline:', error);
+      }
+
+      document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
+      document.getElementById('pdf-viewer-frame').setAttribute('src', pdfUrl);
+      document.getElementById('pdf-viewer-external-link').setAttribute('href', pdfUrl);
     }
 
     function closePdfViewer() {
