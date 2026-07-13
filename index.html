@@ -1307,7 +1307,7 @@
     <div class="phone-screen" id="phone-screen-container">
             
             <!-- SCREEN: SPLASH -->
-            <div class="screen active" id="screen-splash" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%; padding-bottom: 2rem;">
+            <div class="screen active" id="screen-splash" style="justify-content: space-between; height: 100%; padding-bottom: 2rem;">
               <div></div>
               <div style="text-align: center; padding: 0 1.5rem;">
                 <div class="splash-logo" style="font-size: 4rem; background: none; box-shadow: none; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; height: auto; width: auto;">🇵🇦</div>
@@ -2249,7 +2249,7 @@ Pregunta del motociclista: ${userQuery}`;
       dlBtn.style.opacity = '0.5';
 
       try {
-        const cache = await caches.open('cascolegal-v5');
+        const cache = await caches.open('cascolegal-v6');
         let totalFiles = pdfUrls.length;
         let completedFiles = 0;
 
