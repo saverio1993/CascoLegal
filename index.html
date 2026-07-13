@@ -1874,12 +1874,21 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       // Consultar Gemini mediante la función segura del servidor
       let aiResponse = await callGeminiAI(userQuery, ragResult);
       
-      let answerText = "";
-      if (aiResponse) {
-        answerText = aiResponse;
-      } else {
-        answerText = "No se pudo conectar con el asistente de Gemini. Verifica que GEMINI_API_KEY esté configurada en Vercel.";
-      }
+        // Si Gemini no responde, no mostrar mensajes de error ni citas locales.
+        // La pestaña debe permanecer visualmente vacía hasta que exista una respuesta real.
+        if (!aiResponse) {
+          userMsgDiv.remove();
+          loadingMsgDiv.remove();
+
+          const empty = document.createElement('div');
+          empty.className = 'chat-empty-state';
+          empty.id = 'chat-empty-state';
+          empty.textContent = 'Escribe una pregunta para consultar la normativa de tránsito.';
+          container.appendChild(empty);
+          return;
+        }
+
+        const answerText = aiResponse;
       
       // Rellenar la respuesta final
       loadingMsgDiv.innerHTML = `
