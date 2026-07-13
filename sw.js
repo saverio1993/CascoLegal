@@ -1,11 +1,13 @@
-const CACHE_NAME = 'cascolegal-v11';
+const CACHE_NAME = 'cascolegal-v12';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './assets/bikers-society-logo.jpg',
   './assets/icon-192.png',
-  './assets/icon-512.png'
+  './assets/icon-512.png',
+  './assets/pdfjs/pdf.mjs',
+  './assets/pdfjs/pdf.worker.mjs'
 ];
 
 // Instalación: Guardar recursos estáticos básicos

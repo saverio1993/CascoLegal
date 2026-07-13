@@ -727,24 +727,126 @@
       gap: 2px;
     }
 
-    .pdf-viewer-frame {
-      width: 100%;
-      height: 54vh;
-      min-height: 320px;
+    .pdf-viewer-toolbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.5rem;
+      padding: 0.4rem;
       border: 1px solid var(--border-color);
-      border-radius: 10px;
-      background: #fff;
+      border-radius: 11px;
+      background: var(--phone-card-bg);
     }
 
-    .pdf-viewer-object {
-      display: block;
+    .pdf-control-btn {
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .pdf-control-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .pdf-page-status {
+      min-width: 0;
+      text-align: center;
+      color: #cbd5e1;
+      font-size: 0.66rem;
+      font-weight: 700;
+    }
+
+    .pdf-viewer-stage {
+      position: relative;
       width: 100%;
-      height: 54vh;
+      height: 56dvh;
       min-height: 320px;
       border: 1px solid var(--border-color);
       border-radius: 10px;
+      background: #23262d;
+      overflow: auto;
+      overscroll-behavior: contain;
+      touch-action: pan-x pan-y;
+    }
+
+    .pdf-viewer-canvas {
+      display: none;
+      margin: 10px auto;
       background: #fff;
-      overflow: hidden;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    .pdf-viewer-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 1rem;
+      color: #cbd5e1;
+      text-align: center;
+      font-size: 0.72rem;
+    }
+
+    .pdf-loading-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(96, 165, 250, 0.2);
+      border-top-color: #60a5fa;
+      border-radius: 50%;
+      animation: pdfSpin 0.8s linear infinite;
+    }
+
+    @keyframes pdfSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .install-success-toast {
+      position: fixed;
+      top: max(1rem, env(safe-area-inset-top));
+      left: 50%;
+      z-index: 10100;
+      width: min(calc(100% - 2rem), 390px);
+      transform: translate(-50%, -130%);
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid rgba(134, 239, 172, 0.55);
+      border-radius: 15px;
+      background: linear-gradient(135deg, #14532d, #15803d);
+      color: white;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .install-success-toast.visible {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+
+    .install-success-toast strong {
+      display: block;
+      font-family: var(--font-title);
+      font-size: 0.84rem;
+    }
+
+    .install-success-toast span {
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.62rem;
     }
 
     .society-logo {
@@ -1655,6 +1757,14 @@
 </head>
 <body>
 
+  <div class="install-success-toast" id="android-install-success" role="status" aria-live="polite">
+    <i data-lucide="circle-check-big" style="width: 26px; height: 26px; flex: 0 0 26px;"></i>
+    <div>
+      <strong>CascoLegal instalada</strong>
+      <span>La aplicación quedó instalada correctamente.</span>
+    </div>
+  </div>
+
   <div class="phone-shell">
     <!-- Screen Contents -->
     <div class="phone-screen" id="phone-screen-container">
@@ -1911,12 +2021,28 @@
                 <p id="pdf-viewer-highlight" style="font-size: 0.7rem; line-height: 1.45; margin-top: 0.35rem;"></p>
               </div>
               <p id="pdf-viewer-source-label" style="font-size: 0.65rem; color: var(--status-vigente); margin-bottom: 0.5rem;">Buscando documento guardado en este dispositivo...</p>
-              <object class="pdf-viewer-object" id="pdf-viewer-object" type="application/pdf" aria-label="Documento PDF oficial">
-                <iframe class="pdf-viewer-frame" id="pdf-viewer-frame" title="Documento PDF oficial"></iframe>
-              </object>
-              <a class="citation-link" id="pdf-viewer-external-link" target="_blank" rel="noopener noreferrer" style="margin-top: 0.6rem;">
-                <i data-lucide="external-link" style="width: 12px; height: 12px;"></i> Abrir PDF en otra pestaña
-              </a>
+              <div class="pdf-viewer-toolbar" aria-label="Controles del documento PDF">
+                <button class="pdf-control-btn" id="pdf-prev-page" onclick="changePdfPage(-1)" aria-label="Página anterior">
+                  <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
+                </button>
+                <span class="pdf-page-status" id="pdf-page-status">Cargando documento...</span>
+                <button class="pdf-control-btn" id="pdf-next-page" onclick="changePdfPage(1)" aria-label="Página siguiente">
+                  <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+                </button>
+                <button class="pdf-control-btn" onclick="changePdfZoom(-0.2)" aria-label="Reducir zoom">
+                  <i data-lucide="zoom-out" style="width: 17px; height: 17px;"></i>
+                </button>
+                <button class="pdf-control-btn" onclick="changePdfZoom(0.2)" aria-label="Aumentar zoom">
+                  <i data-lucide="zoom-in" style="width: 17px; height: 17px;"></i>
+                </button>
+              </div>
+              <div class="pdf-viewer-stage" id="pdf-viewer-stage">
+                <div class="pdf-viewer-loading" id="pdf-viewer-loading">
+                  <div class="pdf-loading-spinner"></div>
+                  <span>Preparando el documento dentro de CascoLegal...</span>
+                </div>
+                <canvas class="pdf-viewer-canvas" id="pdf-viewer-canvas" aria-label="Página del documento PDF"></canvas>
+              </div>
             </div>
             
             <!-- SCREEN: VERIFICADOR DE AFIRMACIONES -->
@@ -2330,7 +2456,42 @@
     }
 
     let pdfViewerReturnScreen = 'screen-chat';
-    let pdfViewerObjectUrl = null;
+    let pdfJsModulePromise = null;
+    let pdfDocumentInstance = null;
+    let pdfCurrentPage = 1;
+    let pdfZoom = 1;
+    let pdfRenderTask = null;
+
+    const PDF_PAGE_BY_ARTICLE = {
+      '33333333-3333-3333-3333-333333333301': 27,
+      '33333333-3333-3333-3333-333333333302': 34,
+      '33333333-3333-3333-3333-333333333303': 56,
+      '33333333-3333-3333-3333-333333333304': 1,
+      '33333333-3333-3333-3333-333333333305': 1
+    };
+
+    function loadPdfJsModule() {
+      if (!pdfJsModulePromise) {
+        pdfJsModulePromise = import('/assets/pdfjs/pdf.mjs').then(pdfjs => {
+          pdfjs.GlobalWorkerOptions.workerSrc = '/assets/pdfjs/pdf.worker.mjs';
+          return pdfjs;
+        });
+      }
+      return pdfJsModulePromise;
+    }
+
+    function setPdfViewerLoading(message, isError = false) {
+      const loading = document.getElementById('pdf-viewer-loading');
+      const canvas = document.getElementById('pdf-viewer-canvas');
+      if (!loading || !canvas) return;
+      loading.style.display = 'flex';
+      loading.style.color = isError ? '#fca5a5' : '#cbd5e1';
+      loading.innerHTML = isError
+        ? `<i data-lucide="file-warning" style="width: 30px; height: 30px;"></i><span>${escapeHTML(message)}</span>`
+        : `<div class="pdf-loading-spinner"></div><span>${escapeHTML(message)}</span>`;
+      canvas.style.display = 'none';
+      lucide.createIcons();
+    }
 
     async function openPdfViewer(articleId) {
       const art = SIMULATOR_DB.find(item => item.id === articleId);
@@ -2344,34 +2505,101 @@
       lucide.createIcons();
 
       const localPdfUrl = OFFLINE_PDF_BY_DOCUMENT[art.documentNumber];
-      let pdfUrl = localPdfUrl || '';
       let sourceLabel = 'Documento alojado dentro de CascoLegal en Vercel.';
+      setPdfViewerLoading('Preparando el documento dentro de CascoLegal...');
+      document.getElementById('pdf-page-status').textContent = 'Cargando documento...';
 
       try {
-        const cachedPdf = localPdfUrl ? await caches.match(new URL(localPdfUrl, location.origin).href) : null;
+        if (!localPdfUrl) throw new Error('Este documento todavía no está disponible dentro de CascoLegal.');
+        const cachedPdf = await caches.match(new URL(localPdfUrl, location.origin).href);
+        let pdfResponse = cachedPdf;
         if (cachedPdf) {
-          if (pdfViewerObjectUrl) URL.revokeObjectURL(pdfViewerObjectUrl);
-          pdfViewerObjectUrl = URL.createObjectURL(await cachedPdf.blob());
-          pdfUrl = pdfViewerObjectUrl;
           sourceLabel = 'Documento PDF guardado en este dispositivo (modo offline).';
+        } else {
+          pdfResponse = await fetch(localPdfUrl);
+          if (!pdfResponse.ok) throw new Error('No se pudo cargar el documento PDF.');
         }
+
+        document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
+        const pdfjs = await loadPdfJsModule();
+        const pdfBytes = new Uint8Array(await pdfResponse.arrayBuffer());
+        pdfDocumentInstance = await pdfjs.getDocument({ data: pdfBytes }).promise;
+        pdfCurrentPage = Math.min(PDF_PAGE_BY_ARTICLE[articleId] || 1, pdfDocumentInstance.numPages);
+        pdfZoom = 1;
+        await renderCurrentPdfPage();
       } catch (error) {
-        console.warn('No se pudo leer el PDF offline:', error);
+        console.error('No se pudo mostrar el PDF dentro de CascoLegal:', error);
+        document.getElementById('pdf-viewer-source-label').textContent = 'No se pudo preparar el documento.';
+        setPdfViewerLoading('No se pudo visualizar este PDF. Comprueba la conexión y vuelve a intentarlo.', true);
+      }
+    }
+
+    async function renderCurrentPdfPage() {
+      if (!pdfDocumentInstance) return;
+      const stage = document.getElementById('pdf-viewer-stage');
+      const canvas = document.getElementById('pdf-viewer-canvas');
+      const loading = document.getElementById('pdf-viewer-loading');
+      const status = document.getElementById('pdf-page-status');
+      if (!stage || !canvas || !loading || !status) return;
+
+      setPdfViewerLoading(`Cargando página ${pdfCurrentPage}...`);
+      const page = await pdfDocumentInstance.getPage(pdfCurrentPage);
+      const naturalViewport = page.getViewport({ scale: 1 });
+      const availableWidth = Math.max(stage.clientWidth - 20, 260);
+      const fitScale = availableWidth / naturalViewport.width;
+      const viewport = page.getViewport({ scale: fitScale * pdfZoom });
+      const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+      const context = canvas.getContext('2d', { alpha: false });
+
+      if (pdfRenderTask) {
+        try { pdfRenderTask.cancel(); } catch (error) { /* render anterior terminado */ }
       }
 
-      if (!pdfUrl) {
-        sourceLabel = 'Este documento todavía no está disponible dentro de CascoLegal.';
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+      pdfRenderTask = page.render({
+        canvasContext: context,
+        viewport,
+        transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
+      });
+
+      try {
+        await pdfRenderTask.promise;
+      } catch (error) {
+        if (error && error.name === 'RenderingCancelledException') return;
+        throw error;
       }
 
-      document.getElementById('pdf-viewer-source-label').textContent = sourceLabel;
-      document.getElementById('pdf-viewer-object').setAttribute('data', pdfUrl);
-      document.getElementById('pdf-viewer-frame').setAttribute('src', pdfUrl);
-      const externalLink = document.getElementById('pdf-viewer-external-link');
-      externalLink.setAttribute('href', pdfUrl);
-      externalLink.style.display = 'none';
+      loading.style.display = 'none';
+      canvas.style.display = 'block';
+      stage.scrollTop = 0;
+      stage.scrollLeft = 0;
+      status.textContent = `Página ${pdfCurrentPage} de ${pdfDocumentInstance.numPages} · ${Math.round(pdfZoom * 100)}%`;
+      document.getElementById('pdf-prev-page').disabled = pdfCurrentPage <= 1;
+      document.getElementById('pdf-next-page').disabled = pdfCurrentPage >= pdfDocumentInstance.numPages;
+    }
+
+    async function changePdfPage(direction) {
+      if (!pdfDocumentInstance) return;
+      const nextPage = Math.min(Math.max(pdfCurrentPage + direction, 1), pdfDocumentInstance.numPages);
+      if (nextPage === pdfCurrentPage) return;
+      pdfCurrentPage = nextPage;
+      await renderCurrentPdfPage();
+    }
+
+    async function changePdfZoom(delta) {
+      if (!pdfDocumentInstance) return;
+      pdfZoom = Math.min(Math.max(Number((pdfZoom + delta).toFixed(1)), 0.8), 2.2);
+      await renderCurrentPdfPage();
     }
 
     function closePdfViewer() {
+      if (pdfRenderTask) {
+        try { pdfRenderTask.cancel(); } catch (error) { /* render anterior terminado */ }
+      }
       goToScreen(pdfViewerReturnScreen || 'screen-chat');
     }
     
@@ -2676,6 +2904,8 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
     // PWA Install Prompt Handler
     let deferredPrompt;
     let offlineDownloadInProgress = false;
+    let androidInstallSuccessHandled = false;
+    let installSuccessTimer = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -2701,6 +2931,21 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       });
     }
 
+    function showAndroidInstallSuccess() {
+      if (!/Android/i.test(navigator.userAgent) || androidInstallSuccessHandled) return;
+      androidInstallSuccessHandled = true;
+      localStorage.setItem('cascolegal-onboarding-complete', '1');
+      closeInstallOptions();
+      goToScreen('screen-home');
+
+      const toast = document.getElementById('android-install-success');
+      if (!toast) return;
+      toast.classList.add('visible');
+      lucide.createIcons();
+      if (installSuccessTimer) clearTimeout(installSuccessTimer);
+      installSuccessTimer = setTimeout(() => toast.classList.remove('visible'), 3000);
+    }
+
     window.addEventListener('appinstalled', () => {
       deferredPrompt = null;
       const installedLbl = document.getElementById('splash-pwa-installed-lbl');
@@ -2708,6 +2953,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       document.querySelectorAll('.pwa-install-btn').forEach(button => {
         button.style.display = 'none';
       });
+      showAndroidInstallSuccess();
       if (typeof startOfflineCacheDownload === 'function') startOfflineCacheDownload();
     });
 
@@ -2745,6 +2991,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           }
           return;
         }
+        showAndroidInstallSuccess();
       }
 
       await startOfflineCacheDownload();
