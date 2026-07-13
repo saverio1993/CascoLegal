@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cascolegal-v1';
+const CACHE_NAME = 'cascolegal-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -34,32 +34,41 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Interceptar Peticiones: Caché First con Fallback de Red
+// Interceptar Peticiones: Network-First para HTML, Cache-First para otros estáticos
 self.addEventListener('fetch', (event) => {
-  // Ignorar peticiones de APIs externas o métodos que no sean GET
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  const url = new URL(event.request.url);
 
-      return fetch(event.request).then((networkResponse) => {
-        // Guardar automáticamente recursos del mismo origen en caché para el modo offline
-        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+  // Network-First para navegación (HTML) y manifest.json
+  if (event.request.mode === 'navigate' || url.pathname.endsWith('manifest.json')) {
+    event.respondWith(
+      fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
         }
         return networkResponse;
       }).catch(() => {
-        // Fallback offline para navegación
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
+        return caches.match(event.request);
+      })
+    );
+  } else {
+    // Cache-First para estáticos, imágenes, fuentes y PDFs
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-      });
-    })
-  );
+
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return networkResponse;
+        });
+      })
+    );
+  }
 });

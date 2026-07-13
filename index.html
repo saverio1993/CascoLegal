@@ -2084,7 +2084,7 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       dlBtn.style.opacity = '0.5';
 
       try {
-        const cache = await caches.open('cascolegal-v1');
+        const cache = await caches.open('cascolegal-v2');
         let totalFiles = pdfUrls.length;
         let completedFiles = 0;
 
