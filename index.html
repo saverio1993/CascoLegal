@@ -1456,11 +1456,6 @@
                   <button class="btn-action" onclick="enterApp()" style="width: 100%;">
                     Aceptar y Continuar <i data-lucide="arrow-right" style="width: 16px; height: 16px; margin-left: 6px;"></i>
                   </button>
-                  
-                  <button class="btn-action pwa-install-btn" id="splash-btn-install" style="display: none; width: 100%;" onclick="triggerPWAInstall()">
-                    <i data-lucide="smartphone" style="width: 16px; height: 16px; margin-right: 6px;"></i> Instalar en Celular
-                  </button>
-
                   <div id="splash-pwa-installed-lbl" style="display: none; font-size: 0.75rem; color: var(--status-vigente); font-weight: 600; margin-top: 0.5rem;">
                     <i data-lucide="check-circle" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> App instalada en el escritorio
                   </div>
@@ -1570,9 +1565,6 @@
                 <div class="pwa-action-row">
                   <button class="btn-pwa-action" id="btn-download-offline" onclick="startOfflineCacheDownload()">
                     <i data-lucide="download" style="width: 14px; height: 14px;"></i> Descargar PDFs Offline
-                  </button>
-                  <button class="btn-pwa-action pwa-install-btn" id="btn-install-app" style="display: flex;" onclick="triggerPWAInstall()">
-                    <i data-lucide="smartphone" style="width: 14px; height: 14px;"></i> Instalar aplicación
                   </button>
                 </div>
               </div>
@@ -2324,13 +2316,6 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           })
           .catch(err => console.error('Error al registrar Service Worker:', err));
 
-        let reloadedAfterUpdate = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (!reloadedAfterUpdate && navigator.serviceWorker.controller) {
-            reloadedAfterUpdate = true;
-            window.location.reload();
-          }
-        });
       });
     }
 
@@ -2342,8 +2327,6 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
       deferredPrompt = e;
       const installBtn = document.getElementById('btn-install-app');
       if (installBtn) installBtn.style.display = 'flex';
-      const splashBtn = document.getElementById('splash-btn-install');
-      if (splashBtn) splashBtn.style.display = 'flex';
     });
 
     function triggerPWAInstall() {
@@ -2361,8 +2344,6 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
         deferredPrompt = null;
         const installBtn = document.getElementById('btn-install-app');
         if (installBtn) installBtn.style.display = 'none';
-        const splashBtn = document.getElementById('splash-btn-install');
-        if (splashBtn) splashBtn.style.display = 'none';
       });
     }
 
@@ -2389,7 +2370,12 @@ ${matches.map(m => `[Doc ${m.art.documentNumber} Art ${m.art.articleNumber}]: ${
           button.disabled = false;
           button.style.opacity = '1';
         }
-        alert('Chrome no mostró la ventana automática de instalación. En esta misma página, abre el menú ⋮ de Chrome y elige “Instalar CascoLegal” o “Agregar a pantalla de inicio”. Después vuelve a pulsar este botón para descargar los PDFs offline.');
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIOS) {
+          alert('Para instalar CascoLegal en iPhone o iPad: pulsa Compartir y elige “Añadir a pantalla de inicio”. Después vuelve a abrir CascoLegal desde el nuevo icono y pulsa este botón para guardar los PDFs offline.');
+        } else {
+          alert('Chrome no mostró la ventana automática de instalación. Abre el menú ⋮ y elige “Instalar CascoLegal” o “Agregar a pantalla de inicio”. Después vuelve a pulsar este botón para descargar los PDFs offline.');
+        }
         return;
       }
 
